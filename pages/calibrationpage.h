@@ -2,6 +2,7 @@
 #define CALIBRATIONPAGE_H
 
 #include <QWidget>
+#include <QGraphicsScene>
 
 namespace Ui {
 class CalibrationPage;
@@ -17,6 +18,10 @@ public:
 
 private:
     Ui::CalibrationPage *ui;
+
+    QGraphicsScene *scene;
+    QGraphicsEllipseItem *circle;      // 圆对象
+    void renderInclination(double, double);
 };
 
 #endif // CALIBRATIONPAGE_H
