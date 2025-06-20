@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1080</width>
-    <height>840</height>
+    <width>1391</width>
+    <height>850</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,11 +27,18 @@
      <enum>QLayout::SetMaximumSize</enum>
     </property>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="5,3,3">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="5,0,3,3">
       <item>
        <widget class="QLabel" name="ovc_bitmap">
         <property name="text">
          <string>DataMeasurementPages</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="testLabel">
+        <property name="text">
+         <string>TextLabel</string>
         </property>
        </widget>
       </item>

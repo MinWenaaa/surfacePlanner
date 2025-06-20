@@ -16,8 +16,9 @@ public:
     explicit DataMeasurementPage(QWidget *parent = nullptr);
     ~DataMeasurementPage();
 
-private:
     Ui::DataMeasurementPage *ui;
+private:
+
     Q3DScatter *m_scatter;  // 3D 散点图
     QWidget *m_scatterContainer;
 

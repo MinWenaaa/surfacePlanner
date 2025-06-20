@@ -23,5 +23,10 @@ private:
     Ui::MainWindow *ui;
     DataMeasurementPage *measurementPage;
     CalibrationPage *calibrationPage;
+
+    void updatePositionChanged(float, float, float);
+    void updateMeasurementArrived(double, double, double);
+    void updateImageArrived(const char*);
+    void updateInclinationChanged(float, float, bool);
 };
 #endif // MAINWINDOW_H

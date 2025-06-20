@@ -2,28 +2,43 @@
 #define LMFWRAPPER_H
 
 #include <QObject>
+#include <QThread>
 
 class LMFWrapper : public QObject
 {
     Q_OBJECT
 public:
-    explicit LMFWrapper(QObject *parent = nullptr);
+    explicit LMFWrapper(QObject *parent = nullptr)
+        : QObject(parent) {}
+    ~LMFWrapper();
 
     static LMFWrapper& instance() {
         static LMFWrapper inst;
         return inst;
     }
 
-signals:
-    void onPositionChanged(float, float, float);
-    void newMeasurement(double, double, double);
-    void onImageArrived(const char*);
-    void onInclinationChanged(double, double, bool);
-};
 
-void onPositionChanged(float x, float y, float z);
-void onMeasurementArrived(double x, double y, double z);
-void onImageArrived(const char*);
-void onInclinationChanged(double, double, bool);
+    bool connectTo(const char*);
+
+    static void onPositionChanged(float x, float y, float z, void* userData);
+    static void onMeasurementArrived(double x, double y, double z, void* userData);
+    static void onImageArrived(const char* data, void* userData);
+    static void onInclinationChanged(float x, float y, bool flag, void* userData);
+
+private:
+    void init();
+    static QThread* workerThread();
+
+    void handlePositionChanged(float x, float y, float z);
+    void handleMeasurementArrived(double x, double y, double z);
+    void handleImageArrived(const QByteArray& data);
+    void handleInclinationChanged(double x, double y, bool flag);
+
+signals:
+    void positionChanged(float, float, float);
+    void measurementArrived(double, double, double);
+    void imageArrived(const char*);
+    void inclinationChanged(float, float, bool);
+};
 
 #endif // LMFWRAPPER_H

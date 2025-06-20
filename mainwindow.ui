@@ -20,15 +20,45 @@
       <x>10</x>
       <y>10</y>
       <width>1421</width>
-      <height>861</height>
+      <height>851</height>
      </rect>
     </property>
     <property name="tabPosition">
      <enum>QTabWidget::West</enum>
     </property>
     <property name="currentIndex">
-     <number>-1</number>
+     <number>0</number>
     </property>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>仪器检校</string>
+     </attribute>
+     <widget class="CalibrationPage" name="calibration_page" native="true">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1391</width>
+        <height>801</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>数据采集</string>
+     </attribute>
+     <widget class="DataMeasurementPage" name="datameasurement_page" native="true">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1391</width>
+        <height>841</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -49,6 +79,20 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CalibrationPage</class>
+   <extends>QWidget</extends>
+   <header location="global">pages/calibrationpage.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DataMeasurementPage</class>
+   <extends>QWidget</extends>
+   <header>pages/datameasurementpage.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

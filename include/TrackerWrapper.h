@@ -7,6 +7,10 @@
 #endif
 
 #include <functional>
+typedef void (*PositionChangedCallback)(float, float, float, void*);
+typedef void (*MeasurementArrivedCallback)(double, double, double, void*);
+typedef void (*ImageArrivedCallback)(const char*, void*);
+typedef void (*InclinationChangedCallback)(float, float, bool, void*);
 
 class TrackerWrapper {
 public:
@@ -14,9 +18,15 @@ public:
         static TrackerWrapper ins;
         return ins;
     }
-    static std::function<void(float, float, float)> onPostionChangedCallback;
-    static std::function<void(double, double, double)> onMeasurementArrivedCallback;
-    static std::function<void(char*)> onImageArrivedCallback;
+    static PositionChangedCallback onPostionChangedCallback;
+    static MeasurementArrivedCallback onMeasurementArrivedCallback;
+    static ImageArrivedCallback onImageArrivedCallback;
+    static InclinationChangedCallback onInclinationChangedCallback;
+
+    static void* positionChangedUserData;
+    static void* measurementArrivedUserData;
+    static void* imageArrivedUserData;
+    static void* inclinationChangedUserData;
 
 private:
     TrackerWrapper() = default;
@@ -31,7 +41,7 @@ extern "C" {
     TRACKER_API void TrackerDisconnect();
     TRACKER_API bool IsTrackerConnected();
 
-    // ÒÇÆ÷ÉèÖÃ
+    //         
     TRACKER_API bool setMeasurementProfile(const char* profileName);
     TRACKER_API bool setDistanceSeperartion(double seoeration);
     TRACKER_API bool setTimeSeperation(double seperation);
@@ -39,10 +49,11 @@ extern "C" {
     TRACKER_API bool startMeasurement();
     TRACKER_API bool stopMeasurement();
 
-    // »Øµ÷×¢²á
-    TRACKER_API void setOnPositionChangedCallback(std::function<void(float, float, float)> callback);
-    TRACKER_API void setOnMeasurementArrivedCallback(std::function<void(double, double, double)> callback);
-    TRACKER_API void setOnImageArrivedCallback(std::function<void(char*)> callback);
+    //  Øµ ×¢  
+    TRACKER_API void setOnPositionChangedCallback(PositionChangedCallback callback, void* userData = nullptr);
+    TRACKER_API void setOnMeasurementArrivedCallback(MeasurementArrivedCallback callback, void* userData = nullptr);
+    TRACKER_API void setOnImageArrivedCallback(ImageArrivedCallback callback, void* userData = nullptr);
+    TRACKER_API void setInclinationChangedCallback(InclinationChangedCallback callback, void* userData = nullptr);
 
 
     // Camera control
