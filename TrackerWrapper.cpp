@@ -14,9 +14,15 @@ using namespace LMF::Tracker::Enums;
 using namespace LMF::Tracker::ErrorHandling;
 using namespace LMF::Tracker::Targets;
 
-std::function<void(float, float, float)> TrackerWrapper::onPostionChangedCallback = nullptr;
-std::function<void(double, double, double)> TrackerWrapper::onMeasurementArrivedCallback = nullptr;
-std::function<void(char*)> TrackerWrapper::onImageArrivedCallback = nullptr;
+PositionChangedCallback TrackerWrapper::onPostionChangedCallback = nullptr;
+MeasurementArrivedCallback TrackerWrapper::onMeasurementArrivedCallback = nullptr;
+ImageArrivedCallback TrackerWrapper::onImageArrivedCallback = nullptr;
+InclinationChangedCallback TrackerWrapper::onInclinationChangedCallback = nullptr;
+
+void* TrackerWrapper::positionChangedUserData = nullptr;
+void* TrackerWrapper::measurementArrivedUserData = nullptr;
+void* TrackerWrapper::imageArrivedUserData = nullptr;
+void* TrackerWrapper::inclinationChangedUserData = nullptr;
 
 // Internal managed class to hold tracker instances
 ref class ManagedWrapper {
@@ -31,17 +37,17 @@ public:
     static void OnImageArrived(LMF::Tracker::OVC::OverviewCamera^ sender, array<System::Byte>^% image, OVC::ATRCoordinateCollection^ atrcoordinates) {
         pin_ptr<Byte> pinnedImage = &image[0];
         uint8_t* nativeImage = reinterpret_cast<uint8_t*>(pinnedImage);
-		TrackerWrapper::instance().onImageArrivedCallback(reinterpret_cast<char*>(nativeImage));
+        TrackerWrapper::onImageArrivedCallback(reinterpret_cast<char*>(nativeImage), TrackerWrapper::imageArrivedUserData);
     }
 
     // 坐标数据流  
     static void OnTargetPostionChanged(LMF::Tracker::Tracker^ sender, LMF::Tracker::MeasurementResults::SingleShotMeasurement3D^ position) {
-        float coord1 = position->Position->Coordinate1->Value;
-        float coord2 = position->Position->Coordinate2->Value;
-        float coord3 = position->Position->Coordinate3->Value;
-
-		TrackerWrapper::instance().onPostionChangedCallback(coord1, coord2, coord3);
-
+        if (TrackerWrapper::onPostionChangedCallback) {
+            float coord1 = position->Position->Coordinate1->Value;
+            float coord2 = position->Position->Coordinate2->Value;
+            float coord3 = position->Position->Coordinate3->Value;
+            TrackerWrapper::onPostionChangedCallback(coord1, coord2, coord3, TrackerWrapper::positionChangedUserData);
+        }
     }
 
     static void OnMeasurementArrived(MeasurementSettings^ sender, MeasurementCollection^ measurements, LmfException^ exception) {
@@ -58,7 +64,7 @@ public:
                 double coord1 = singleShotMeas3D->Position->Coordinate1->Value;
                 double coord2 = singleShotMeas3D->Position->Coordinate2->Value;
                 double coord3 = singleShotMeas3D->Position->Coordinate3->Value;
-				TrackerWrapper::instance().onMeasurementArrivedCallback(coord1, coord2, coord3);
+                TrackerWrapper::onMeasurementArrivedCallback(coord1, coord2, coord3, TrackerWrapper::measurementArrivedUserData);
             }
             return;
         }
@@ -77,7 +83,7 @@ public:
             x = currentMeasurement->X->Value; y = currentMeasurement->Y->Value;
         }
         else flag = false;
-
+        TrackerWrapper::onInclinationChangedCallback(x, y, true, TrackerWrapper::inclinationChangedUserData);
     }
 };
 
@@ -198,28 +204,34 @@ extern "C" {
     }
 
     // 回调注册
-    TRACKER_API void setOnPositionChangedCallback(std::function<void(float, float, float)> callback) {
-        TrackerWrapper::instance().onPostionChangedCallback = callback;
-        ManagedWrapper::LMFTracker->Targets->TargetPositionChanged += gcnew LMF::Tracker::Targets::TargetCollection::TargetPositionChangedHandler(&ManagedWrapper::OnTargetPostionChanged);
+    TRACKER_API void setOnPositionChangedCallback(PositionChangedCallback callback, void* userData) {
+        TrackerWrapper::onPostionChangedCallback = callback;
+        TrackerWrapper::positionChangedUserData = userData;
+        ManagedWrapper::LMFTracker->Targets->TargetPositionChanged +=
+            gcnew LMF::Tracker::Targets::TargetCollection::TargetPositionChangedHandler(&ManagedWrapper::OnTargetPostionChanged);
     }
 
-    TRACKER_API void setOnMeasurementArrivedCallback(std::function<void(double, double, double)> callback) {
-        TrackerWrapper::instance().onMeasurementArrivedCallback = callback;
-        ManagedWrapper::LMFTracker->Measurement->MeasurementArrived += gcnew LMF::Tracker::Measurements::MeasurementSettings::MeasurementArrivedHandler(&ManagedWrapper::OnMeasurementArrived);
+    TRACKER_API void setOnMeasurementArrivedCallback(MeasurementArrivedCallback callback, void* userData) {
+        TrackerWrapper::onMeasurementArrivedCallback = callback;
+        TrackerWrapper::measurementArrivedUserData = userData;
+        ManagedWrapper::LMFTracker->Measurement->MeasurementArrived +=
+            gcnew LMF::Tracker::Measurements::MeasurementSettings::MeasurementArrivedHandler(&ManagedWrapper::OnMeasurementArrived);
     }
 
-    TRACKER_API void setOnImageArrivedCallback(std::function<void(char*)> callback) {
-        TrackerWrapper::instance().onImageArrivedCallback = callback;
-        ManagedWrapper::LMFTracker->OverviewCamera->ImageArrived += gcnew LMF::Tracker::OVC::OverviewCamera::ImageArrivedHandler(&ManagedWrapper::OnImageArrived);
+    TRACKER_API void setOnImageArrivedCallback(ImageArrivedCallback callback, void* userData) {
+        TrackerWrapper::onImageArrivedCallback = callback;
+        TrackerWrapper::imageArrivedUserData = userData;
+        ManagedWrapper::LMFTracker->OverviewCamera->ImageArrived +=
+            gcnew LMF::Tracker::OVC::OverviewCamera::ImageArrivedHandler(&ManagedWrapper::OnImageArrived);
         ManagedWrapper::LMFTracker->OverviewCamera->StartAsync();
-
     }
 
-    TRACKER_API void setInclinationChangedCallback(std::function<void(float, float, bool)> callback) {
-        TrackerWrapper::instance().onPostionChangedCallback = callback;
-        ManagedWrapper::LMFTracker->InclinationSensor->Monitoring->Interval = 0.5;
-        ManagedWrapper::LMFTracker->InclinationSensor->Monitoring->InclinationChanged += gcnew LMF::Tracker::Inclination::InclinationMonitoring::InclinationChangedHandler(&ManagedWrapper::OnInclinationChanged);
-    }
+    TRACKER_API void setInclinationChangedCallback(InclinationChangedCallback callback, void* userData) {
+        TrackerWrapper::onInclinationChangedCallback = callback;
+        TrackerWrapper::inclinationChangedUserData = userData;
+        //ManagedWrapper::LMFTracker->InclinationSensor->Monitoring->Interval = 15;
+        ManagedWrapper::LMFTracker->InclinationSensor->Monitoring->InclinationChanged +=
+            gcnew LMF::Tracker::Inclination::InclinationMonitoring::InclinationChangedHandler(&ManagedWrapper::OnInclinationChanged);
     }
 
     TRACKER_API bool StopOverviewCamera() {
