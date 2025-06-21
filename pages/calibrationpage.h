@@ -68,6 +68,7 @@ private:
     QScatterSeries* tempPlanSerious;
     QScatter3DSeries* temp3dSerious;
     double last_x, last_y, currentDistance;
+    double max_x, min_x, max_y, min_y, max_z, min_z;
 
     int pointNum;
 

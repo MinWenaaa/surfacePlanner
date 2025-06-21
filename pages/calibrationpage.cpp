@@ -74,7 +74,8 @@ void CalibrationPage::on_measureButton_clicked() {
         double value = text.toDouble(&ok);
         if(ui->sampleMod->currentIndex()) setDistanceSeperartion(ok? value: 0.1);
         else setTimeSeperation(ok ? value : 100);
-        startMeasurement();
+        //startMeasurement();
+        LMFWrapper::instance().sendTestData();
 
         ui->measureStatusLabel->setText("测量中");
         isMeasuring = true;
@@ -82,7 +83,7 @@ void CalibrationPage::on_measureButton_clicked() {
         appendLog("开始：第 " + QString::number(measureNum+1) + " 次测量", colors[measureNum]);
 
     } else {
-        stopMeasurement();
+        //stopMeasurement();
 
         ui->measureStatusLabel->setText("");
         isMeasuring = false;
@@ -119,7 +120,6 @@ void CalibrationPage::on_refreshButton_clicked() {
     eleAxisX->setRange(0, 30);
     eleAxisY->setRange(0, 2);
     planAxisX->setRange(0, 30);
-    planAxisY = new QValueAxis();
     planAxisY->setRange(0, 2);
 
     appendLog("数据清空");
@@ -132,14 +132,26 @@ void CalibrationPage::addPoint(double x, double y, double z ) {
         currentDistance += std::sqrt((x-last_x)*(x-last_x) + (y-last_y) *(y-last_y));
         if(measureNum==0) eleAxisX->setRange(0, currentDistance + 1);
     } else if(measureNum==0){
-        eleAxisY->setRange(0, z + 1);
+        max_x = min_x = x; max_y = min_y = y; max_z = min_z = z;
+        eleAxisY->setRange(z - 4, z + 4);
+        planAxisX->setRange(min_x-1, max_x+1);
+        planAxisY->setRange(min_y-1, max_y+1);
     }
     pointNum++;
     last_x = x; last_y = y;
+
+    min_x = x < min_x ? x : min_x; max_x = x > max_x ? x : max_x;
+    min_x = y < min_x ? y : min_x; max_y = y > max_y ? x : max_y;
+
+    if(min_x < planAxisX->min()+0.5){
+        planAxisX->setRange(min_x-1, max_x+1);}
+    if(max_x > planAxisX->max()-0.5) {
+        planAxisX->setRange(min_x-1, max_x+1);}
+    if(min_y < planAxisY->min()+0.5) planAxisY->setRange(min_x-1, max_x+1);
+    if(max_y > planAxisY->max()-0.5) planAxisY->setRange(min_x-1, max_x+1);
+
     QPointF elevationPoint(currentDistance, z);
     QPointF planPoint(x, y);
-    // QPointF elevationPoint(pointNum, z);
-    // QPointF planPoint(pointNum, pointNum);
     QVector3D threeDPoint(x, y, z);
 
     m_elevationData[measureNum].append(elevationPoint);
@@ -148,9 +160,6 @@ void CalibrationPage::addPoint(double x, double y, double z ) {
     tempElevationSerious->append(elevationPoint);
     tempPlanSerious->append(planPoint);
     temp3dSerious->dataProxy()->addItem(threeDPoint);
-
-    planAxisX->setRange(x - 1, x + 1); // 根据数据调整
-    planAxisY->setRange(y - 1, y + 1);
 
     // 刷新图表
     planChart->update();
@@ -197,7 +206,10 @@ void CalibrationPage::setupView() {
         QLineSeries *series = new QLineSeries();
         series->setName(QString("重复测量%1").arg(i+1));
         series->setColor(colors[i]);
+        series->setPen(Qt::NoPen);
+        series->setMarkerSize(8);
         m_elevationSeries.append(series);
+
     }
 
 
@@ -205,9 +217,7 @@ void CalibrationPage::setupView() {
 
     planChart = new QChart();
     planAxisX = new QValueAxis();
-    planAxisX->setRange(0, 30);
     planAxisY = new QValueAxis();
-    planAxisY->setRange(0, 2);
     planChart->addAxis(planAxisX, Qt::AlignBottom);
     planChart->addAxis(planAxisY, Qt::AlignLeft);
 
@@ -224,6 +234,7 @@ void CalibrationPage::setupView() {
         QScatterSeries *series = new QScatterSeries();
         series->setName(QString("重复测量%1").arg(i+1));
         series->setColor(colors[i]);
+        series->setMarkerShape(QScatterSeries::MarkerShapeCircle);
         series->setMarkerSize(8);
         m_planSeries.append(series);
     }

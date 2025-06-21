@@ -18,40 +18,58 @@
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>1061</width>
+     <width>1371</width>
      <height>811</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,5">
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,0,7">
     <property name="sizeConstraint">
      <enum>QLayout::SetMaximumSize</enum>
     </property>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="5,0,3,3">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="4,3,3">
       <item>
-       <widget class="QLabel" name="ovc_bitmap">
-        <property name="text">
-         <string>DataMeasurementPages</string>
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="title">
+         <string>GroupBox</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="testLabel">
-        <property name="text">
-         <string>TextLabel</string>
-        </property>
-       </widget>
+       <widget class="QGraphicsView" name="graphicsView"/>
       </item>
       <item>
-       <widget class="QWidget" name="profile" native="true"/>
-      </item>
-      <item>
-       <widget class="QWidget" name="elevation" native="true"/>
+       <widget class="QWidget" name="widget" native="true"/>
       </item>
      </layout>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_2"/>
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="5,0,2">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2"/>
+      </item>
+      <item>
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>GroupBox</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

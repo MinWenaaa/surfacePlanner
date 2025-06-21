@@ -1,3 +1,5 @@
+#include <QTimer>
+
 #include "lmfwrapper.h"
 #include "include/TrackerWrapper.h"
 
@@ -81,4 +83,38 @@ void LMFWrapper::handleImageArrived(const QByteArray& data) {
 
 void LMFWrapper::handleInclinationChanged(double x, double y, bool flag) {
     emit inclinationChanged(x, y, flag);
+}
+
+void LMFWrapper::sendTestData() {
+    QTimer* timer = new QTimer(this);
+
+    // 初始化坐标值
+    static double x = 0.0;
+    static double y = 0.0;
+    const double z = 1.0;
+    const double dx = 0.1;
+    const double dy = 0.1;
+
+    // 连接定时器信号
+    connect(timer, &QTimer::timeout, this, [=]() mutable {
+
+        emit measurementArrived(x, y, z);
+
+        x += dx;
+        if(x>10) {
+            y+=dy;
+            x = 0;
+        }
+
+        if (x > 10.0) {
+            x = 0.0;
+        }
+
+        if (y > 3.0) {
+            y = 0.0;
+        }
+    });
+
+    // 启动定时器，100ms间隔
+    timer->start(100);
 }

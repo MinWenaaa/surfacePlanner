@@ -32,6 +32,8 @@ public:
     static void onImageArrived(const char* data, void* userData);
     static void onInclinationChanged(float x, float y, bool flag, void* userData);
 
+    void sendTestData();
+
 private:
     void init();
     static QThread* workerThread();
@@ -48,6 +50,8 @@ signals:
     void inclinationChanged(float, float, bool);
 
     void changeTab(int index);
+
+
 };
 
 #endif // LMFWRAPPER_H
