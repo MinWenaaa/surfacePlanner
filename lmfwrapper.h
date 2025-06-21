@@ -46,6 +46,8 @@ signals:
     void measurementArrived(double, double, double);
     void imageArrived(const char*);
     void inclinationChanged(float, float, bool);
+
+    void changeTab(int index);
 };
 
 #endif // LMFWRAPPER_H

@@ -109,6 +109,23 @@ void CalibrationPage::on_sampleMod_currentIndexChanged(int index) {
 
 }
 
+void CalibrationPage::on_refreshButton_clicked() {
+    refreshData();
+    for(int i=0; i<3;i++) {
+        m_elevationSeries[i]->clear();
+        m_planSeries[i]->clear();
+        m_3dSeries[i]->dataProxy()->removeItems(0, m_3dSeries[i]->dataProxy()->itemCount());
+    }
+    eleAxisX->setRange(0, 30);
+    eleAxisY->setRange(0, 2);
+    planAxisX->setRange(0, 30);
+    planAxisY = new QValueAxis();
+    planAxisY->setRange(0, 2);
+
+    appendLog("数据清空");
+    ui->continueButton->setEnabled(false);
+}
+
 void CalibrationPage::addPoint(double x, double y, double z ) {
     if(measureNum>2) return;
     if(pointNum){
@@ -157,11 +174,7 @@ void CalibrationPage::renderInclination(double x, double y) {
 
 void CalibrationPage::setupView() {
 
-    for (int i = 0; i < 3; ++i) {
-        m_elevationData.append(QVector<QPointF>());
-        m_planData.append(QVector<QPointF>());
-        m_3dData.append(QVector<QVector3D>());
-    }
+    refreshData();
 
     elevationChart = new QChart();
     eleAxisX = new QValueAxis();
@@ -322,4 +335,19 @@ void CalibrationPage::handleAnalysisError(const QString& message) {
 
 void CalibrationPage::onAnalysisFInished() {
     ui->continueButton->setEnabled(true);
+    appendLog("处理完成");
 }
+
+void CalibrationPage::refreshData() {
+    for (int i = 0; i < 3; ++i) {
+        m_elevationData.append(QVector<QPointF>());
+        m_planData.append(QVector<QPointF>());
+        m_3dData.append(QVector<QVector3D>());
+    }
+}
+
+void CalibrationPage::on_continueButton_clicked()
+{
+    emit LMFWrapper::instance().changeTab(1);
+}
+

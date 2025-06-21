@@ -1,3 +1,5 @@
+#include <QTabBar>
+
 #include "mainwindow.h"
 #include "ui_datameasurementpage.h"
 #include "ui_mainwindow.h"
@@ -21,10 +23,13 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::updateImageArrived);
     connect(wrapper, &LMFWrapper::inclinationChanged,
             this, &MainWindow::updateInclinationChanged);
+    connect(wrapper,&LMFWrapper::changeTab,
+            this, &MainWindow::changeTab);
 
     calibrationPage = ui->calibration_page;
     measurementPage = ui->datameasurement_page;
-    measurementPage->ui->testLabel->setText("新的文本内容");
+
+    //ui->tabWidget->tabBar()->setEnabled(false);
 }
 
 void MainWindow::updatePositionChanged(float, float, float) {
@@ -48,3 +53,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::changeTab(int index) {
+    ui->tabWidget->setCurrentIndex(index);
+}

@@ -38,6 +38,10 @@ private slots:
     void handleAnalysisError(const QString& message);
     void onAnalysisFInished();
 
+    void on_refreshButton_clicked();
+
+    void on_continueButton_clicked();
+
 private:
     Ui::CalibrationPage *ui;
 
@@ -73,6 +77,7 @@ private:
     void setupView();
     void appendLog(const QString& message, QColor color = QColor(33, 33, 33));
     void startAnalysis();
+    void refreshData();
 
 };
 
