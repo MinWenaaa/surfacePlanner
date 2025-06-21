@@ -400,8 +400,67 @@
       <item>
        <widget class="QGroupBox" name="groupBox_4">
         <property name="title">
-         <string/>
+         <string>分析报告</string>
         </property>
+        <widget class="QPushButton" name="refreshButton">
+         <property name="geometry">
+          <rect>
+           <x>860</x>
+           <y>180</y>
+           <width>80</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>再次验证</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="continueButton">
+         <property name="geometry">
+          <rect>
+           <x>960</x>
+           <y>180</y>
+           <width>80</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>下一步</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="horizontalLayoutWidget_4">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>571</width>
+           <height>81</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QLabel" name="label_num">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_maxDiff">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_correlation">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </item>
      </layout>

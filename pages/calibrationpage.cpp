@@ -1,5 +1,6 @@
 #include <cmath>
 
+#include <QString>
 #include <QGraphicsEllipseItem>
 #include <QPen>
 #include <QBrush>
@@ -12,6 +13,7 @@
 #include "calibrationpage.h"
 #include "ui_calibrationpage.h"
 #include "include/TrackerWrapper.h"
+#include "tools/elevationanalyzer.h"
 #include "lmfwrapper.h"
 
 const int bubble_r = 36;
@@ -36,6 +38,9 @@ CalibrationPage::CalibrationPage(QWidget *parent)
     auto wrapper = &LMFWrapper::instance();
     connect(wrapper, &LMFWrapper::measurementArrived,
                 this, &CalibrationPage::addPoint);
+
+    ui->refreshButton->setEnabled(false);
+    ui->continueButton->setEnabled(false);
 
     setupView();
 }
@@ -88,6 +93,8 @@ void CalibrationPage::on_measureButton_clicked() {
         if(measureNum==3) {
             appendLog("已完成全部测量，等待生成报告...");
             ui->measureButton->setEnabled(false);
+            ui->refreshButton->setEnabled(true);
+            startAnalysis();
         }
     }
 
@@ -106,8 +113,8 @@ void CalibrationPage::addPoint(double x, double y, double z ) {
     if(measureNum>2) return;
     if(pointNum){
         currentDistance += std::sqrt((x-last_x)*(x-last_x) + (y-last_y) *(y-last_y));
-        if(measureNum==1) eleAxisX->setRange(0, currentDistance + 1);
-    } else if(measureNum==1){
+        if(measureNum==0) eleAxisX->setRange(0, currentDistance + 1);
+    } else if(measureNum==0){
         eleAxisY->setRange(0, z + 1);
     }
     pointNum++;
@@ -231,6 +238,8 @@ void CalibrationPage::setupView() {
 
     for (int i = 0; i < 3; ++i) {
         QScatter3DSeries *series = new QScatter3DSeries();
+        series->setMesh(QAbstract3DSeries::MeshPoint);
+        series->setItemSize(0.1f);
         series->setBaseColor(colors[i]);
         m_3dSeries.append(series);
     }
@@ -268,4 +277,49 @@ void CalibrationPage::appendLog(const QString& message, QColor color) {
     cursor.insertText(message + "\n", format); // 插入带格式的日志消息
 
     logEdit->ensureCursorVisible();
+}
+
+void CalibrationPage::startAnalysis() {
+    QThread* workerThread = new QThread(this);
+    ElevationAnalyzer* analyzer = new ElevationAnalyzer();
+
+    // 将分析器移动到新线程
+    analyzer->moveToThread(workerThread);
+
+    // 连接信号槽
+    connect(workerThread, &QThread::finished, analyzer, &QObject::deleteLater);
+    connect(workerThread, &QThread::finished, workerThread, &QObject::deleteLater);
+
+    connect(this, &CalibrationPage::requestAnalysis, analyzer, &ElevationAnalyzer::analyzeElevationData);
+    connect(analyzer, &ElevationAnalyzer::analysisComplete,
+            this, &CalibrationPage::handleAnalysisResults);
+    connect(analyzer, &ElevationAnalyzer::errorOccurred,
+            this, &CalibrationPage::handleAnalysisError);
+    connect(analyzer, &ElevationAnalyzer::allFinished,
+            this, &CalibrationPage::onAnalysisFInished);
+
+    // 启动线程
+    workerThread->start();
+
+    ui->label_num->setText("测量序号");
+    ui->label_maxDiff->setText("最大高差");
+    ui->label_correlation->setText("相关系数");
+
+    emit requestAnalysis(m_elevationData);
+}
+
+void CalibrationPage::handleAnalysisResults(int dataset1, int dataset2, double maxDiff, double correlation) {
+    QString current = ui->label_num->text();
+    ui->label_num->setText(current + '\n' + QString("%1").arg(QString::number(dataset1) + " & " + QString::number(dataset2), 12, ' '));
+    current = ui->label_maxDiff->text();
+    ui->label_maxDiff->setText(current + '\n' + QString::number(maxDiff));
+    current = ui->label_correlation->text();
+    ui->label_correlation->setText(current + '\n' + QString::number(correlation));
+}
+void CalibrationPage::handleAnalysisError(const QString& message) {
+    appendLog("处理错误："+message);
+}
+
+void CalibrationPage::onAnalysisFInished() {
+    ui->continueButton->setEnabled(true);
 }

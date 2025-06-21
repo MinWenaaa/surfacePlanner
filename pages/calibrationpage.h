@@ -26,10 +26,17 @@ public:
 public slots:
     void addPoint(double, double, double);
 
+signals:
+    void requestAnalysis(const QVector<QVector<QPointF>>& elevationData);
+
 private slots:
     void on_connectionButton_clicked();
     void on_measureButton_clicked();
     void on_sampleMod_currentIndexChanged(int index);
+
+    void handleAnalysisResults(int dataset1, int dataset2, double maxDiff, double correlation);
+    void handleAnalysisError(const QString& message);
+    void onAnalysisFInished();
 
 private:
     Ui::CalibrationPage *ui;
@@ -65,6 +72,7 @@ private:
     void renderInclination(double, double);
     void setupView();
     void appendLog(const QString& message, QColor color = QColor(33, 33, 33));
+    void startAnalysis();
 
 };
 

@@ -15,13 +15,15 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     pages/calibrationpage.cpp \
-    pages/datameasurementpage.cpp
+    pages/datameasurementpage.cpp \
+    tools/elevationanalyzer.cpp
 
 HEADERS += \
     lmfwrapper.h \
     mainwindow.h \
     pages/calibrationpage.h \
-    pages/datameasurementpage.h
+    pages/datameasurementpage.h \
+    tools/elevationanalyzer.h
 
 FORMS += \
     mainwindow.ui \
