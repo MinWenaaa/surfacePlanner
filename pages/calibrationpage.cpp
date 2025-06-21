@@ -4,7 +4,6 @@
 #include <QPen>
 #include <QBrush>
 #include <QVBoxLayout>
-#include <QtCharts/QValueAxis>  // 添加这行
 #include <QtCharts/QLineSeries>  // 确保这行也存在
 #include <QtCharts/QChartView>
 #include <QtDataVisualization/Q3DScatter>
@@ -13,6 +12,7 @@
 #include "calibrationpage.h"
 #include "ui_calibrationpage.h"
 #include "include/TrackerWrapper.h"
+#include "lmfwrapper.h"
 
 const int bubble_r = 36;
 //const char* address = "192.168.250.1";
@@ -22,7 +22,8 @@ const QColor colors[] = {QColor(249, 231, 167), QColor(239, 118, 123), QColor(67
 const QColor backgroundColor = QColor("#f9f9f9");
 
 CalibrationPage::CalibrationPage(QWidget *parent)
-    : QWidget(parent), ui(new Ui::CalibrationPage), isMeasuring(false), measureNum(0)
+    : QWidget(parent), ui(new Ui::CalibrationPage), isMeasuring(false), measureNum(0),
+    last_x(0), last_y(0), currentDistance(0), pointNum(0)
 {
     ui->setupUi(this);
     view_3d = ui->view_3d;
@@ -31,6 +32,10 @@ CalibrationPage::CalibrationPage(QWidget *parent)
     logEdit = ui->logEdit;
     logEdit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);  // 隐藏垂直滚动条
     logEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // 隐藏水平滚动条
+
+    auto wrapper = &LMFWrapper::instance();
+    connect(wrapper, &LMFWrapper::measurementArrived,
+                this, &CalibrationPage::addPoint);
 
     setupView();
 }
@@ -41,31 +46,48 @@ CalibrationPage::~CalibrationPage()
 }
 
 void CalibrationPage::on_connectionButton_clicked() {
-    TrackerConnect(address);
+    LMFWrapper::instance().connectTo(address);
 }
 
 
 void CalibrationPage::on_measureButton_clicked() {
     if(!isMeasuring) {
+        tempElevationSerious = m_elevationSeries[measureNum];
+        tempPlanSerious = m_planSeries[measureNum];
+        temp3dSerious = m_3dSeries[measureNum];
+        planChart->addSeries(tempPlanSerious);
+        elevationChart->addSeries(tempElevationSerious);
+        m_scatter->addSeries(temp3dSerious);
+        tempPlanSerious->attachAxis(planAxisX);  // 平面图绑定平面图的X轴
+        tempPlanSerious->attachAxis(planAxisY);  // 平面图绑定平面图的Y轴
+        tempElevationSerious->attachAxis(eleAxisX);  // 高程图绑定高程图的X轴
+        tempElevationSerious->attachAxis(eleAxisY);  // 高程图绑定高程图的Y轴
+        pointNum = 0; currentDistance = 0;
+
         QString text = ui->seperationEdit->text();
         bool ok;
         double value = text.toDouble(&ok);
         if(ui->sampleMod->currentIndex()) setDistanceSeperartion(ok? value: 0.1);
         else setTimeSeperation(ok ? value : 100);
         startMeasurement();
+
         ui->measureStatusLabel->setText("测量中");
         isMeasuring = true;
         ui->measureButton->setText("结束测量");
         appendLog("开始：第 " + QString::number(measureNum+1) + " 次测量", colors[measureNum]);
 
     } else {
+        stopMeasurement();
+
         ui->measureStatusLabel->setText("");
         isMeasuring = false;
         ui->measureButton->setText("开始测量");
         measureNum++;
         appendLog("第 " + QString::number(measureNum) + " 次测量结束", colors[measureNum-1]);
+
         if(measureNum==3) {
             appendLog("已完成全部测量，等待生成报告...");
+            ui->measureButton->setEnabled(false);
         }
     }
 
@@ -77,6 +99,38 @@ void CalibrationPage::on_sampleMod_currentIndexChanged(int index) {
 
     setMeasurementProfile(index+1);
     ui->UnitLabel->setText(index ? "m": "ms");
+
+}
+
+void CalibrationPage::addPoint(double x, double y, double z ) {
+    if(measureNum>2) return;
+    if(pointNum){
+        currentDistance += std::sqrt((x-last_x)*(x-last_x) + (y-last_y) *(y-last_y));
+        if(measureNum==1) eleAxisX->setRange(0, currentDistance + 1);
+    } else if(measureNum==1){
+        eleAxisY->setRange(0, z + 1);
+    }
+    pointNum++;
+    last_x = x; last_y = y;
+    QPointF elevationPoint(currentDistance, z);
+    QPointF planPoint(x, y);
+    // QPointF elevationPoint(pointNum, z);
+    // QPointF planPoint(pointNum, pointNum);
+    QVector3D threeDPoint(x, y, z);
+
+    m_elevationData[measureNum].append(elevationPoint);
+    m_planData[measureNum].append(planPoint);
+    m_3dData[measureNum].append(threeDPoint);
+    tempElevationSerious->append(elevationPoint);
+    tempPlanSerious->append(planPoint);
+    temp3dSerious->dataProxy()->addItem(threeDPoint);
+
+    planAxisX->setRange(x - 1, x + 1); // 根据数据调整
+    planAxisY->setRange(y - 1, y + 1);
+
+    // 刷新图表
+    planChart->update();
+    elevationChart->update();
 
 }
 
@@ -96,50 +150,63 @@ void CalibrationPage::renderInclination(double x, double y) {
 
 void CalibrationPage::setupView() {
 
-    QChart *chart = new QChart();
+    for (int i = 0; i < 3; ++i) {
+        m_elevationData.append(QVector<QPointF>());
+        m_planData.append(QVector<QPointF>());
+        m_3dData.append(QVector<QVector3D>());
+    }
 
-    // 设置坐标轴
-    QValueAxis *axisX = new QValueAxis();
-    axisX->setRange(0, 30);
-    QValueAxis *axisY = new QValueAxis();
-    axisY->setRange(0, 2);
+    elevationChart = new QChart();
+    eleAxisX = new QValueAxis();
+    eleAxisX->setRange(0, 30);
+    eleAxisY = new QValueAxis();
+    eleAxisY->setRange(0, 2);
+    elevationChart->addAxis(eleAxisX, Qt::AlignBottom);
+    elevationChart->addAxis(eleAxisY, Qt::AlignLeft);
 
-    chart->addAxis(axisX, Qt::AlignBottom);
-    chart->addAxis(axisY, Qt::AlignLeft);
-
-    m_elevationChartView = new QChartView(chart);
+    m_elevationChartView = new QChartView(elevationChart);
     m_elevationChartView->setRenderHint(QPainter::Antialiasing);
     m_elevationChartView->setStyleSheet("background: transparent; border: none;");
-    m_elevationChartView->setRenderHint(QPainter::Antialiasing);
-    chart->setBackgroundBrush(Qt::transparent);
+    elevationChart->setBackgroundBrush(Qt::transparent);
 
     QVBoxLayout *layout2 = new QVBoxLayout(view_elevation);
     layout2->setContentsMargins(0, 0, 0, 0);
     layout2->addWidget(m_elevationChartView);
 
+    for (int i = 0; i < 3; ++i) {
+        QLineSeries *series = new QLineSeries();
+        series->setName(QString("重复测量%1").arg(i+1));
+        series->setColor(colors[i]);
+        m_elevationSeries.append(series);
+    }
 
 
-    QChart *chart2 = new QChart();
-    // 设置坐标轴
-    QValueAxis *axisX2 = new QValueAxis();
-    axisX2->setRange(0, 30);
-    QValueAxis *axisY2 = new QValueAxis();
-    axisY2->setRange(0, 2);
 
-    chart2->addAxis(axisX2, Qt::AlignBottom);
-    chart2->addAxis(axisY2, Qt::AlignLeft);
 
-    // 创建图表视图
-    m_planChartView = new QChartView(chart2);
+    planChart = new QChart();
+    planAxisX = new QValueAxis();
+    planAxisX->setRange(0, 30);
+    planAxisY = new QValueAxis();
+    planAxisY->setRange(0, 2);
+    planChart->addAxis(planAxisX, Qt::AlignBottom);
+    planChart->addAxis(planAxisY, Qt::AlignLeft);
+
+    m_planChartView = new QChartView(planChart);
     m_planChartView->setRenderHint(QPainter::Antialiasing);
     m_planChartView->setStyleSheet("background: transparent; border: none;");
-    m_planChartView->setRenderHint(QPainter::Antialiasing);
-    chart2->setBackgroundBrush(Qt::transparent);
+    planChart->setBackgroundBrush(Qt::transparent);
 
-    // // 替换原来的view_elevation
     QVBoxLayout *layout3 = new QVBoxLayout(view_3d);
     layout3->setContentsMargins(0, 0, 0, 0);
     layout3->addWidget(m_planChartView);
+
+    for (int i = 0; i < 3; ++i) {
+        QScatterSeries *series = new QScatterSeries();
+        series->setName(QString("重复测量%1").arg(i+1));
+        series->setColor(colors[i]);
+        series->setMarkerSize(8);
+        m_planSeries.append(series);
+    }
 
 
 
@@ -161,6 +228,13 @@ void CalibrationPage::setupView() {
     theme->setBackgroundEnabled(false);  // 禁用主题背景
     theme->setBackgroundColor(Qt::transparent);  // 主题背景透明
     theme->setWindowColor(backgroundColor);
+
+    for (int i = 0; i < 3; ++i) {
+        QScatter3DSeries *series = new QScatter3DSeries();
+        series->setBaseColor(colors[i]);
+        m_3dSeries.append(series);
+    }
+
 
 
     scene = new QGraphicsScene(this);
@@ -185,7 +259,6 @@ void CalibrationPage::setupView() {
 void CalibrationPage::appendLog(const QString& message, QColor color) {
     QString timestamp = QDateTime::currentDateTime().toString("[hh:mm:ss] ");
 
-    // 方法1：使用 QTextCharFormat（推荐）
     QTextCharFormat format;
     format.setForeground(QBrush(color)); // 设置文字颜色
 

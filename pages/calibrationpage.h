@@ -5,7 +5,9 @@
 #include <QGraphicsScene>
 #include <QtDataVisualization>
 #include <QtCharts/QChartView>
+#include <QtCharts/QValueAxis>
 #include <QtCharts/QLineSeries>
+#include <QtCharts/QScatterSeries>
 #include <QtWidgets/QWidget>
 #include <QTextEdit>
 
@@ -21,11 +23,12 @@ public:
     explicit CalibrationPage(QWidget *parent = nullptr);
     ~CalibrationPage();
 
+public slots:
+    void addPoint(double, double, double);
+
 private slots:
     void on_connectionButton_clicked();
-
     void on_measureButton_clicked();
-
     void on_sampleMod_currentIndexChanged(int index);
 
 private:
@@ -41,6 +44,21 @@ private:
     Q3DScatter *m_scatter;
     QChartView *m_elevationChartView;
     QChartView *m_planChartView;
+    QChart *elevationChart, *planChart;
+    QValueAxis *eleAxisX, *eleAxisY, *planAxisX, *planAxisY;
+
+    QVector<QVector<QPointF>> m_elevationData;
+    QVector<QVector<QPointF>> m_planData;
+    QVector<QVector<QVector3D>> m_3dData;
+    QList<QLineSeries*> m_elevationSeries;  // 高程图表系列
+    QList<QScatterSeries*> m_planSeries;    // 平面图表系列
+    QList<QScatter3DSeries*> m_3dSeries;    // 3D图表系列
+    QLineSeries* tempElevationSerious;
+    QScatterSeries* tempPlanSerious;
+    QScatter3DSeries* temp3dSerious;
+    double last_x, last_y, currentDistance;
+
+    int pointNum;
 
     QTextEdit* logEdit;
 
