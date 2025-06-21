@@ -4,6 +4,13 @@
 #include <QObject>
 #include <QThread>
 
+enum profileName {
+    Stationary,
+    ContinuousTime,
+    ContinuousDistance
+};
+
+
 class LMFWrapper : public QObject
 {
     Q_OBJECT

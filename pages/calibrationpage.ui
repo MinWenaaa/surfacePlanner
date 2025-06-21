@@ -20,7 +20,7 @@
    <string>Form</string>
   </property>
   <property name="autoFillBackground">
-   <bool>true</bool>
+   <bool>false</bool>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -39,7 +39,7 @@
      <enum>QLayout::SetMaximumSize</enum>
     </property>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_setting" stretch="3,3,4">
+     <layout class="QVBoxLayout" name="verticalLayout_setting" stretch="4,4,3">
       <property name="sizeConstraint">
        <enum>QLayout::SetMaximumSize</enum>
       </property>
@@ -288,7 +288,7 @@
           <item>
            <widget class="QLabel" name="UnitLabel">
             <property name="text">
-             <string>m</string>
+             <string>ms</string>
             </property>
            </widget>
           </item>
@@ -305,14 +305,27 @@
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
-           <widget class="QLabel" name="label_5">
+           <widget class="QLabel" name="measureStatusLabel">
             <property name="text">
-             <string>测量中：</string>
+             <string/>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="measureButton">
             <property name="text">
              <string>开始测量</string>
             </property>
@@ -327,14 +340,17 @@
         <property name="title">
          <string>日志信息</string>
         </property>
-        <widget class="QTextEdit" name="textEdit">
+        <widget class="QTextEdit" name="logEdit">
          <property name="geometry">
           <rect>
            <x>10</x>
            <y>30</y>
            <width>281</width>
-           <height>251</height>
+           <height>161</height>
           </rect>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </widget>

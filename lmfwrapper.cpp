@@ -1,12 +1,6 @@
 #include "lmfwrapper.h"
 #include "include/TrackerWrapper.h"
 
-const char* profileName[] = {
-    "Stationary",
-    "Continuous Time",
-    "Continuous Distance"
-};
-
 //const char* address = "192.168.250.1";
 //const char* address = "AT500Simulator";
 
@@ -33,7 +27,7 @@ bool LMFWrapper::connectTo(const char* address) {
         setOnImageArrivedCallback(&LMFWrapper::onImageArrived, this);
         setInclinationChangedCallback(&LMFWrapper::onInclinationChanged, this);
 
-        setMeasurementProfile(profileName[2]);
+        setMeasurementProfile(ContinuousTime);
         return true;
     }
     return false;

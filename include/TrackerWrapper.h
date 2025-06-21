@@ -41,15 +41,15 @@ extern "C" {
     TRACKER_API void TrackerDisconnect();
     TRACKER_API bool IsTrackerConnected();
 
-    //         
-    TRACKER_API bool setMeasurementProfile(const char* profileName);
+    // ÒÇÆ÷ÉèÖÃ
+    TRACKER_API bool setMeasurementProfile(int);
     TRACKER_API bool setDistanceSeperartion(double seoeration);
     TRACKER_API bool setTimeSeperation(double seperation);
 
     TRACKER_API bool startMeasurement();
     TRACKER_API bool stopMeasurement();
 
-    //  Øµ ×¢  
+    // »Øµ÷×¢²á
     TRACKER_API void setOnPositionChangedCallback(PositionChangedCallback callback, void* userData = nullptr);
     TRACKER_API void setOnMeasurementArrivedCallback(MeasurementArrivedCallback callback, void* userData = nullptr);
     TRACKER_API void setOnImageArrivedCallback(ImageArrivedCallback callback, void* userData = nullptr);
