@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1391</width>
-    <height>850</height>
+    <height>819</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <x>10</x>
      <y>10</y>
      <width>1371</width>
-     <height>811</height>
+     <height>801</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,0,7">
@@ -137,7 +137,7 @@
           </rect>
          </property>
          <property name="text">
-          <string>TextLabel</string>
+          <string/>
          </property>
         </widget>
        </widget>
@@ -219,7 +219,7 @@
            <height>31</height>
           </rect>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="4,2,3,1,3">
           <item>
            <widget class="QLabel" name="measureStatusLabel">
             <property name="text">
@@ -229,6 +229,26 @@
           </item>
           <item>
            <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="stopAndContinueButton">
+            <property name="text">
+             <string>暂停</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_5">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -350,19 +370,6 @@
           </item>
          </layout>
         </widget>
-        <widget class="QPushButton" name="pushButton">
-         <property name="geometry">
-          <rect>
-           <x>200</x>
-           <y>150</y>
-           <width>80</width>
-           <height>24</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>startOVC</string>
-         </property>
-        </widget>
        </widget>
       </item>
       <item>
@@ -403,9 +410,22 @@
           <rect>
            <x>10</x>
            <y>30</y>
-           <width>1031</width>
+           <width>941</width>
            <height>181</height>
           </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="saveButton">
+         <property name="geometry">
+          <rect>
+           <x>960</x>
+           <y>30</y>
+           <width>80</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>保存数据</string>
          </property>
         </widget>
        </widget>

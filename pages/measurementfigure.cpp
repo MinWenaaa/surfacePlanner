@@ -145,11 +145,14 @@ void measurementFigure::addPoint(double x, double y, double z) {
 }
 
 void measurementFigure::clearAllData() {
-    for(int i=0; i<3;i++) {
+    for(int i=0; i<seriousNum;i++) {
         if(!m_elevationSeries[i]) return;
         m_elevationSeries[i]->clear();
         m_planSeries[i]->clear();
         m_3dSeries[i]->dataProxy()->removeItems(0, m_3dSeries[i]->dataProxy()->itemCount());
+        planChart->removeSeries(m_planSeries[i]);
+        elevationChart->removeSeries(m_elevationSeries[i]);
+        m_scatter->removeSeries(m_3dSeries[i]);
     }
 }
 

@@ -10,11 +10,16 @@
 
 DataMeasurementPage::DataMeasurementPage(QWidget *parent)
     : QWidget(parent), ui(new Ui::DataMeasurementPage), tempConnectionPMeasNum(0), ConnectionPNum(0),
-    tempX(0), tempY(0), tempZ(0)
+    tempX(0), tempY(0), tempZ(0), measureComple(true), fileNum(0)
 {
     ui->setupUi(this);
     imageLabel = ui->imageLabel;
     logEdit = ui->logEdit;
+    measureButton = ui->measureButton;
+    stopAContiButton = ui->stopAndContinueButton;
+
+    stopAContiButton->setEnabled(false);
+    ui->saveButton->setEnabled(false);
 
     convertPoint = new QStandardItemModel(this);
     initTableView();
@@ -39,12 +44,13 @@ void DataMeasurementPage::initTableView() {
 
 }
 
-void DataMeasurementPage::on_fileButton_clicked()
-{
+void DataMeasurementPage::on_fileButton_clicked() {
+    // 打开文件浏览器需要关闭摄像机避免界面卡死
+    StopOverviewCamera();
     filePath = QFileDialog::getSaveFileName(
         nullptr,                       // 父窗口
         "新建工程文件",                  // 对话框标题
-        "D:/Code/RTK-LarserBenchmark/reslut/",             // 默认目录(用户主目录)
+        "D:/Code/RTK-LarserBenchmark/",             // 默认目录(用户主目录)
         "所有文件 (*);;文本文件 (*.txt);;CSV文件 (*.csv)"  // 文件过滤器
         );
 
@@ -54,17 +60,14 @@ void DataMeasurementPage::on_fileButton_clicked()
     }
 
     ui->file_pathLabel->setText(filePath);
+    fileNum = 0;
 
-    // StartOverviewCamera();
-    //auto wrapper = &LMFWrapper::instance();
-    // connect(wrapper, &LMFWrapper::imageArrived,
-    //      this, &DataMeasurementPage::renderBitmap);
-    // connect(wrapper, &LMFWrapper::singleMeasurementArrived,
-    //      this, &DataMeasurementPage::addConnectionPoint);
-
+    StartOverviewCamera();
 }
 
 void DataMeasurementPage::on_addPointButton_clicked() {
+    if(filePath.isEmpty()) return;
+
     QString name = ui->pointNameEdit->text();
     ui->pointNameEdit->setText("");
     int row = convertPoint->rowCount();
@@ -75,12 +78,13 @@ void DataMeasurementPage::on_addPointButton_clicked() {
 
     auto wrapper = &LMFWrapper::instance();
     connect(wrapper, &LMFWrapper::stationaryMeasuremntArrived,
-            this, &DataMeasurementPage::addConnectionPoint);
+               this, &DataMeasurementPage::receiveStationaryData);
+
     setMeasurementProfile(0);
     emit stationaryMeasureSig();
 }
 
-void DataMeasurementPage::addConnectionPoint(double x, double y, double z) {
+void DataMeasurementPage::receiveStationaryData(double x, double y, double z) {
     if(tempConnectionPMeasNum<10) {
         tempX += x; tempY += y; tempZ += z;
         emit stationaryMeasureSig();
@@ -94,22 +98,9 @@ void DataMeasurementPage::addConnectionPoint(double x, double y, double z) {
 
         auto wrapper = &LMFWrapper::instance();
         disconnect(wrapper, &LMFWrapper::stationaryMeasuremntArrived,
-                   this, &DataMeasurementPage::addConnectionPoint);
+                   this, &DataMeasurementPage::receiveStationaryData);
     }
 }
-
-void DataMeasurementPage::receivePositionChange() {
-
-}
-
-void DataMeasurementPage::receiveInclinationChange() {
-
-}
-
-void DataMeasurementPage::receiveSingleMeasurement() {
-
-}
-
 
 void DataMeasurementPage::addAverConnectionPoint(double x, double y, double z) {
     int row = convertPoint->rowCount() - 1;
@@ -120,6 +111,17 @@ void DataMeasurementPage::addAverConnectionPoint(double x, double y, double z) {
 
     ui->tableView->resizeColumnsToContents();
 }
+
+void DataMeasurementPage::receivePositionChange() {
+
+}
+
+void DataMeasurementPage::receiveSingleMeasurement(double x, double y, double z) {
+    if(!isMeasuring) return;
+    measureFig->addPoint(x, y, z);
+    dataPoint.append(QVector3D(x, y, z));
+}
+
 
 void DataMeasurementPage::on_removeConnectionButton_clicked() {
     QModelIndexList selected = ui->tableView->selectionModel()->selectedRows();
@@ -166,19 +168,88 @@ void DataMeasurementPage::on_sampleMod_currentIndexChanged(int index) {
 void DataMeasurementPage::on_measureButton_clicked() {
     saveConnectionData();
 
-    if(!isMeasuring) {
+    if(measureComple) {
+        QString text = ui->seperationEdit->text();
+        bool ok;
+        double value = text.toDouble(&ok);
+        setMeasurementProfile(ui->sampleMod->currentIndex()+1);
+        if(ui->sampleMod->currentIndex()) setDistanceSeperartion(ok? value: 0.1);
+        else setTimeSeperation(ok ? value : 100);
+        startMeasurement();
+        //LMFWrapper::instance().sendTestData();
+
+        ui->measureStatusLabel->setText("测量中");
+        isMeasuring = true; measureComple = false;
+        ui->measureButton->setText("结束测量");
+        appendLog("测量开始！");
+        stopAContiButton->setEnabled(true);
+
+        measureFig->addSerious("", QColor(67, 163, 239));
 
     } else {
+        stopMeasurement();
 
+        ui->measureStatusLabel->setText("");
+        isMeasuring = false; measureComple = true;
+        ui->measureButton->setText("开始测量");
+        appendLog("测量结束！");
+        stopAContiButton->setEnabled(false);
+        measureButton->setEnabled(false);
+        ui->saveButton->setEnabled(true);
     }
 }
 
-void DataMeasurementPage::renderBitmap(const char* bitmapData) {
+void DataMeasurementPage::on_stopAndContinueButton_clicked() {
+    if(isMeasuring) {
+        stopMeasurement();
+        stopAContiButton->setText("继续");
+        tempSaveEleData();
+        isMeasuring = false;
+        appendLog("测量暂停，数据已保存");
+    } else {
+        startMeasurement();
+        stopAContiButton->setText("暂停");
+        appendLog("测量继续");
+        isMeasuring = true;
+    }
+
+}
+
+void DataMeasurementPage::on_saveButton_clicked() {
+    measureButton->setEnabled(true);
+    measureFig->clearAllData();
+    tempSaveEleData();
+    ui->saveButton->setEnabled(false);
+}
+
+void DataMeasurementPage::tempSaveEleData() {
+    if(filePath.isEmpty()) {
+        QMessageBox::warning(this, "警告", "未建立工程");
+        return;
+    }
+    QFile file(filePath+"_" + QString::number(fileNum) + ".p");
+    if(!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(this, "错误", "无法打开文件");
+        return;
+    }
+
+    QTextStream out(&file);
+    for(int i =0; i<dataPoint.count();i++) {
+        QVector3D *point = &dataPoint[i];
+        out << QString::number(point->x()) << "," << QString::number(point->y()) << "," << QString::number(point->z()) <<"\n";
+    }
+    dataPoint.clear();
+    file.close();
+
+    fileNum++;
+}
+
+void DataMeasurementPage::receiveImageData(const char* bitmapData) {
 
     QImage image(reinterpret_cast<const uchar*>(bitmapData), 640, 480, QImage::Format_RGB888);
+    QImage mirroredImage = image.mirrored(false, true);  // 水平不翻转(false)，垂直翻转(true)
 
-    QPixmap pixmap = QPixmap::fromImage(image);
-
+    QPixmap pixmap = QPixmap::fromImage(mirroredImage);
     imageLabel->setPixmap(pixmap.scaled(imageLabel->size(),
                                         Qt::KeepAspectRatio,
                                         Qt::SmoothTransformation));
@@ -206,8 +277,4 @@ DataMeasurementPage::~DataMeasurementPage()
 
 
 
-void DataMeasurementPage::on_pushButton_clicked()
-{
-    StartOverviewCamera();
-}
 

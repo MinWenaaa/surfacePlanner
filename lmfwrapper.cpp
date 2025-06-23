@@ -1,4 +1,5 @@
 #include <QTimer>
+#include <QtConcurrent/QtConcurrent>
 
 #include "lmfwrapper.h"
 #include "include/TrackerWrapper.h"
@@ -51,9 +52,9 @@ void LMFWrapper::onMeasurementArrived(double x, double y, double z, int type, vo
 
 void LMFWrapper::onImageArrived(const char* data, void* userData) {
     LMFWrapper* wrapper = static_cast<LMFWrapper*>(userData);
-    QMetaObject::invokeMethod(wrapper, [=](){
+    QtConcurrent::run([=](){
         wrapper->handleImageArrived(data);
-    }, Qt::QueuedConnection);
+    });
 }
 
 void LMFWrapper::onInclinationChanged(float x, float y, bool flag, void* userData) {
