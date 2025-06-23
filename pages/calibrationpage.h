@@ -42,6 +42,8 @@ private slots:
 
     void on_continueButton_clicked();
 
+    void on_pushButton_clicked();
+
 private:
     Ui::CalibrationPage *ui;
 

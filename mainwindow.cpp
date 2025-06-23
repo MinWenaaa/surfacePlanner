@@ -17,8 +17,8 @@ MainWindow::MainWindow(QWidget *parent)
     auto wrapper = &LMFWrapper::instance();
     connect(wrapper, &LMFWrapper::positionChanged,
             this, &MainWindow::updatePositionChanged);
-    connect(wrapper, &LMFWrapper::measurementArrived,
-            this, &MainWindow::updateMeasurementArrived);
+    // connect(wrapper, &LMFWrapper::measurementArrived,
+    //         this, &MainWindow::updateMeasurementArrived);
     connect(wrapper, &LMFWrapper::imageArrived,
             this, &MainWindow::updateImageArrived);
     connect(wrapper, &LMFWrapper::inclinationChanged,

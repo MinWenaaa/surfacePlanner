@@ -57,7 +57,7 @@
            <height>181</height>
           </rect>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="2,1,7">
           <item>
            <layout class="QHBoxLayout" name="connectionLayout" stretch="1,5,1,2">
             <item>
@@ -106,111 +106,130 @@
            </spacer>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="inclinationLayout" stretch="3,5,2">
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_2">
+           <widget class="QWidget" name="info_container" native="true">
+            <widget class="QWidget" name="layoutWidget">
+             <property name="geometry">
+              <rect>
+               <x>8</x>
+               <y>3</y>
+               <width>271</width>
+               <height>111</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="inclinationLayout" stretch="3,5,2">
               <item>
-               <widget class="QLabel" name="label_4">
-                <property name="text">
-                 <string>连接成功</string>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_2">
+                <item>
+                 <widget class="QLabel" name="statusLabel">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="nameLabel">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="adressLabel">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer_3">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QProgressBar" name="progressBar">
+                  <property name="minimumSize">
+                   <size>
+                    <width>36</width>
+                    <height>18</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>36</width>
+                    <height>18</height>
+                   </size>
+                  </property>
+                  <property name="value">
+                   <number>80</number>
+                  </property>
+                  <property name="textVisible">
+                   <bool>false</bool>
+                  </property>
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer_2">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>AT500</string>
-                </property>
-               </widget>
+               <widget class="QGraphicsView" name="Inclination_container"/>
               </item>
               <item>
-               <spacer name="verticalSpacer_3">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QProgressBar" name="progressBar">
-                <property name="minimumSize">
-                 <size>
-                  <width>48</width>
-                  <height>24</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>48</width>
-                  <height>24</height>
-                 </size>
-                </property>
-                <property name="value">
-                 <number>80</number>
-                </property>
-                <property name="textVisible">
-                 <bool>false</bool>
-                </property>
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="verticalSpacer_2">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
+               <layout class="QVBoxLayout" name="verticalLayout">
+                <item>
+                 <widget class="QLabel" name="inclination_x">
+                  <property name="text">
+                   <string>x: 0</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="inclination_y">
+                  <property name="text">
+                   <string>y: 0</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
               </item>
              </layout>
-            </item>
-            <item>
-             <widget class="QGraphicsView" name="Inclination_container"/>
-            </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout">
-              <item>
-               <widget class="QLabel" name="inclination_x">
-                <property name="text">
-                 <string>x: 0</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="inclination_y">
-                <property name="text">
-                 <string>y: 0</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="verticalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-           </layout>
+            </widget>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -288,7 +307,7 @@
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>70</y>
+           <y>180</y>
            <width>281</width>
            <height>31</height>
           </rect>
@@ -319,6 +338,107 @@
             <property name="text">
              <string>开始测量</string>
             </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="horizontalLayoutWidget_5">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>70</y>
+           <width>281</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>精度：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBox">
+            <item>
+             <property name="text">
+              <string>Fast</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Standard</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Precise</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="horizontalLayoutWidget_6">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>110</y>
+           <width>281</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>目标类型：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBox_2">
+            <item>
+             <property name="text">
+              <string>TBR 0.5in</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>RFI</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>RRR 0.5in</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>BRR 1.5in</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>RRR 1.5in</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Mirror</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>RRR 0.875in</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Custom Reflector</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
@@ -389,6 +509,9 @@
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox_4">
+        <property name="styleSheet">
+         <string notr="true">background-color:rgb(244, 244, 244)</string>
+        </property>
         <property name="title">
          <string>分析报告</string>
         </property>

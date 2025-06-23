@@ -8,7 +8,7 @@
 
 #include <functional>
 typedef void (*PositionChangedCallback)(float, float, float, void*);
-typedef void (*MeasurementArrivedCallback)(double, double, double, void*);
+typedef void (*MeasurementArrivedCallback)(double, double, double, int, void*);
 typedef void (*ImageArrivedCallback)(const char*, void*);
 typedef void (*InclinationChangedCallback)(float, float, bool, void*);
 
@@ -48,6 +48,7 @@ extern "C" {
 
     TRACKER_API bool startMeasurement();
     TRACKER_API bool stopMeasurement();
+    TRACKER_API bool stationaryMeasurement();
 
     // »Øµ÷×¢²á
     TRACKER_API void setOnPositionChangedCallback(PositionChangedCallback callback, void* userData = nullptr);

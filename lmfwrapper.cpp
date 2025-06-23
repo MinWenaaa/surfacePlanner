@@ -42,10 +42,10 @@ void LMFWrapper::onPositionChanged(float x, float y, float z, void* userData) {
     }, Qt::QueuedConnection);
 }
 
-void LMFWrapper::onMeasurementArrived(double x, double y, double z, void* userData) {
+void LMFWrapper::onMeasurementArrived(double x, double y, double z, int type, void* userData) {
     LMFWrapper* wrapper = static_cast<LMFWrapper*>(userData);
     QMetaObject::invokeMethod(wrapper, [=](){
-        wrapper->handleMeasurementArrived(x, y, z);
+        wrapper->handleMeasurementArrived(x/1000, y/1000, z, type);
     }, Qt::QueuedConnection);
 }
 
@@ -70,11 +70,12 @@ LMFWrapper::~LMFWrapper() {
 }
 
 void LMFWrapper::handlePositionChanged(float x, float y, float z) {
-    emit positionChanged(x, y, z);
+    emit positionChanged(x/1000, y/1000, z);
 }
 
-void LMFWrapper::handleMeasurementArrived(double x, double y, double z) {
-    emit measurementArrived(x, y, z);
+void LMFWrapper::handleMeasurementArrived(double x, double y, double z, int type) {
+    if(type == 0) emit singleMeasurementArrived(x, y, z);
+    if(type == 1) emit stationaryMeasuremntArrived(x, y, z);
 }
 
 void LMFWrapper::handleImageArrived(const QByteArray& data) {
@@ -98,7 +99,7 @@ void LMFWrapper::sendTestData() {
     // 连接定时器信号
     connect(timer, &QTimer::timeout, this, [=]() mutable {
 
-        emit measurementArrived(x, y, z);
+        emit singleMeasurementArrived(x, y, z);
 
         x += dx;
         if(x>10) {
@@ -117,4 +118,8 @@ void LMFWrapper::sendTestData() {
 
     // 启动定时器，100ms间隔
     timer->start(100);
+}
+
+void LMFWrapper::stationaryMeasurementThis() {
+    stationaryMeasurement();
 }

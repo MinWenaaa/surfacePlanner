@@ -20,7 +20,7 @@ const int bubble_r = 36;
 //const char* address = "192.168.250.1";
 const char* address = "AT500Simulator";
 
-const QColor colors[] = {QColor(249, 231, 167), QColor(239, 118, 123), QColor(67, 163, 239)};
+const QColor colors[] = {QColor(249, 231, 167), QColor(239, 118, 123), QColor(67, 163, 239), QColor("#629433")};
 const QColor backgroundColor = QColor("#f9f9f9");
 
 CalibrationPage::CalibrationPage(QWidget *parent)
@@ -36,13 +36,15 @@ CalibrationPage::CalibrationPage(QWidget *parent)
     logEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // 隐藏水平滚动条
 
     auto wrapper = &LMFWrapper::instance();
-    connect(wrapper, &LMFWrapper::measurementArrived,
+    connect(wrapper, &LMFWrapper::singleMeasurementArrived,
                 this, &CalibrationPage::addPoint);
 
     ui->refreshButton->setEnabled(false);
     ui->continueButton->setEnabled(false);
+    ui->info_container->hide();
 
     setupView();
+
 }
 
 CalibrationPage::~CalibrationPage()
@@ -52,6 +54,10 @@ CalibrationPage::~CalibrationPage()
 
 void CalibrationPage::on_connectionButton_clicked() {
     LMFWrapper::instance().connectTo(address);
+    ui->info_container->show();
+    ui->statusLabel->setText("连接成功");
+    ui->adressLabel->setText(address);
+    ui->nameLabel->setText("AT500");
 }
 
 
@@ -74,8 +80,8 @@ void CalibrationPage::on_measureButton_clicked() {
         double value = text.toDouble(&ok);
         if(ui->sampleMod->currentIndex()) setDistanceSeperartion(ok? value: 0.1);
         else setTimeSeperation(ok ? value : 100);
-        //startMeasurement();
-        LMFWrapper::instance().sendTestData();
+        startMeasurement();
+        //LMFWrapper::instance().sendTestData();
 
         ui->measureStatusLabel->setText("测量中");
         isMeasuring = true;
@@ -152,7 +158,7 @@ void CalibrationPage::addPoint(double x, double y, double z ) {
 
     QPointF elevationPoint(currentDistance, z);
     QPointF planPoint(x, y);
-    QVector3D threeDPoint(x, y, z);
+    QVector3D threeDPoint(x, z, y);
 
     m_elevationData[measureNum].append(elevationPoint);
     m_planData[measureNum].append(planPoint);
@@ -170,8 +176,7 @@ void CalibrationPage::addPoint(double x, double y, double z ) {
 void CalibrationPage::renderInclination(double x, double y) {
     if (!circle) return;
 
-    // 根据偏差确定颜色
-    QColor color = std::sqrt(x*x+y*y) > 10 ? Qt::red : Qt::green;
+    QColor color = std::sqrt(x*x+y*y) > 10 ? colors[1] : colors[3];
 
     circle->setRect(x - bubble_r/2, y - bubble_r/2, bubble_r, bubble_r);  // 半径为3
     circle->setPen(QPen(color, 0));
@@ -218,6 +223,8 @@ void CalibrationPage::setupView() {
     planChart = new QChart();
     planAxisX = new QValueAxis();
     planAxisY = new QValueAxis();
+    planAxisX->setRange(0, 30);
+    planAxisY->setRange(0, 30);
     planChart->addAxis(planAxisX, Qt::AlignBottom);
     planChart->addAxis(planAxisY, Qt::AlignLeft);
 
@@ -245,13 +252,18 @@ void CalibrationPage::setupView() {
     m_scatter->setAspectRatio(1.0);
     m_scatter->setHorizontalAspectRatio(1.0);
     m_scatter->scene()->activeCamera()->setZoomLevel(200);
+    m_scatter->setAxisX(new QValue3DAxis);
+    m_scatter->setAxisY(new QValue3DAxis);
+    m_scatter->setAxisZ(new QValue3DAxis);
+    m_scatter->axisX()->setRange(-10, 10);
+    m_scatter->axisY()->setRange(-5, 5);
+    m_scatter->axisZ()->setRange(-10, 10);
     QWidget *container = QWidget::createWindowContainer(m_scatter);
     container->setAttribute(Qt::WA_TranslucentBackground);
     container->setStyleSheet("background: transparent; border: none;");
     QVBoxLayout *layout = new QVBoxLayout(view_plan);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(container);
-    //m_scatter->setBackgroundColor(Qt::transparent);  // 主背景透明
 
     Q3DTheme *theme = m_scatter->activeTheme();
     theme->setGridEnabled(false);
@@ -277,13 +289,22 @@ void CalibrationPage::setupView() {
     ui->Inclination_container->setRenderHint(QPainter::Antialiasing);
     ui->Inclination_container->scale(1, -1);
 
+    QGraphicsEllipseItem* outerCircle = new QGraphicsEllipseItem(-bubble_r*1.5, -bubble_r*1.5, bubble_r*3, bubble_r*3);
+    outerCircle->setPen(QPen(Qt::black, 0.5));
+    outerCircle->setBrush(Qt::NoBrush);
+    scene->addItem(outerCircle);
+    QGraphicsEllipseItem* innerCircle = new QGraphicsEllipseItem(-bubble_r*0.8, -bubble_r*0.8, bubble_r*1.6, bubble_r*1.6);
+    innerCircle->setPen(QPen(Qt::black, 0.5));
+    innerCircle->setBrush(Qt::NoBrush);
+    scene->addItem(innerCircle);
+
     circle = new QGraphicsEllipseItem(-bubble_r/2, -bubble_r/2, bubble_r, bubble_r);
-    circle->setPen(QPen(Qt::green, 0));
-    circle->setBrush(QBrush(Qt::green));
+    circle->setPen(QPen(colors[3], 0));
+    circle->setBrush(QBrush(colors[3]));
     scene->addItem(circle);
 
-    auto crosshairH = scene->addLine(-10, 0, 10, 0, QPen(Qt::black, 0.5));
-    auto crosshairV = scene->addLine(0, -10, 0, 10, QPen(Qt::black, 0.5));
+    auto crosshairH = scene->addLine(-bubble_r*1.5, 0, bubble_r*1.5, 0, QPen(Qt::black, 0.5));
+    auto crosshairV = scene->addLine(0, -bubble_r*1.5, 0, bubble_r*1.5, QPen(Qt::black, 0.5));
     crosshairH->setZValue(1);
     crosshairV->setZValue(1);
 
@@ -360,5 +381,14 @@ void CalibrationPage::refreshData() {
 void CalibrationPage::on_continueButton_clicked()
 {
     emit LMFWrapper::instance().changeTab(1);
+    auto wrapper = &LMFWrapper::instance();
+    disconnect(wrapper, &LMFWrapper::singleMeasurementArrived,
+            this, &CalibrationPage::addPoint);
+}
+
+
+void CalibrationPage::on_pushButton_clicked()
+{
+    stationaryMeasurement();
 }
 
