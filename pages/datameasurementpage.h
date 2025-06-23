@@ -3,14 +3,20 @@
 
 #include <QWidget>
 #include <QMainWindow>
-#include <QLibrary>
-#include <QtDataVisualization>
 #include <QTableView>
 #include <QStandardItemModel>
+#include <QLibrary>
+#include <QtDataVisualization>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QScatterSeries>
+#include <QtCharts/QValueAxis>
+#include <QtCharts/QChartView>
+
 
 class QPushButton;
 class QLabel;
 class QTextEdit;
+
 
 namespace Ui {
 class DataMeasurementPage;
@@ -37,21 +43,35 @@ private slots:
     void addAverConnectionPoint(double x, double y, double z);        // 添加点
 
     void on_removeConnectionButton_clicked();
-
     void on_measureButton_clicked();
+    void on_sampleMod_currentIndexChanged(int index);
 
 private:
 
     QStandardItemModel *convertPoint;
 
-    Q3DScatter *m_scatter;  // 3D 散点图
+    QWidget *view_3d, *view_elevation, *view_plan;
+    Q3DScatter *m_scatter;
+    QChartView *m_elevationChartView;
+    QChartView *m_planChartView;
+    QChart *elevationChart, *planChart;
     QWidget *m_scatterContainer;
-    QLabel *imageLabel;
+    QList<QLineSeries*> m_elevationSeries;  // 高程图表系列
+    QList<QScatterSeries*> m_planSeries;    // 平面图表系列
+    QList<QScatter3DSeries*> m_3dSeries;    // 3D图表系列
+    QLineSeries* tempElevationSerious;
+    QScatterSeries* tempPlanSerious;
+    QScatter3DSeries* temp3dSerious;
+    QValueAxis *eleAxisX, *eleAxisY, *planAxisX, *planAxisY;
+    double last_x, last_y, currentDistance;
+    double max_x, min_x, max_y, min_y, max_z, min_z;
 
     double tempX, tempY, tempZ;
     int tempConnectionPMeasNum, ConnectionPNum;
     QString filePath;
+    bool isMeasuring;
 
+    QLabel *imageLabel;
     QTextEdit* logEdit;
 
     void setupView();

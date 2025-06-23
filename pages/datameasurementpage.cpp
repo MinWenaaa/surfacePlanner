@@ -1,6 +1,8 @@
 #include <QRandomGenerator>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QtCharts/QChartView>
+
 #include "include/TrackerWrapper.h"
 #include "datameasurementpage.h"
 #include "ui_datameasurementpage.h"
@@ -29,24 +31,8 @@ DataMeasurementPage::DataMeasurementPage(QWidget *parent)
 }
 
 void DataMeasurementPage::setupView() {
-    m_scatter = new Q3DScatter();
 
-    m_scatterContainer = QWidget::createWindowContainer(m_scatter);
-    ui->verticalLayout_2->addWidget(m_scatterContainer);
 
-    m_scatter->setAxisX(new QValue3DAxis);
-    m_scatter->setAxisY(new QValue3DAxis);
-    m_scatter->setAxisZ(new QValue3DAxis);
-    m_scatter->axisX()->setRange(-10, 10);
-    m_scatter->axisY()->setRange(-5, 5);
-    m_scatter->axisZ()->setRange(-10, 10);
-
-    m_scatter->setOrthoProjection(false);
-    m_scatter->setShadowQuality(QAbstract3DGraph::ShadowQualityNone); // 阴影质量（可选）
-
-    m_scatter->setSelectionMode(QAbstract3DGraph::SelectionNone); // 选择模式
-
-    m_scatter->scene()->activeCamera()->setCameraPosition(0, 0, 30);
 }
 
 void DataMeasurementPage::initTableView() {
@@ -113,6 +99,7 @@ void DataMeasurementPage::addConnectionPoint(double x, double y, double z) {
         tempX = 0, tempY = 0, tempZ = 0;
         tempConnectionPMeasNum = 0;
         ui->stationStatusLabel->setText("");
+
         auto wrapper = &LMFWrapper::instance();
         disconnect(wrapper, &LMFWrapper::stationaryMeasuremntArrived,
                    this, &DataMeasurementPage::addConnectionPoint);
@@ -164,9 +151,21 @@ void DataMeasurementPage::saveConnectionData() {
     file.close();
 }
 
+void DataMeasurementPage::on_sampleMod_currentIndexChanged(int index) {
+    if(isMeasuring) return;
+
+    setMeasurementProfile(index+1);
+    ui->UnitLabel->setText(index ? "m": "ms");
+}
+
 void DataMeasurementPage::on_measureButton_clicked() {
     saveConnectionData();
 
+    if(!isMeasuring) {
+
+    } else {
+
+    }
 }
 
 void DataMeasurementPage::renderBitmap(const char* bitmapData) {
@@ -198,3 +197,6 @@ DataMeasurementPage::~DataMeasurementPage()
 {
     delete ui;
 }
+
+
+

@@ -83,7 +83,7 @@
   <customwidget>
    <class>CalibrationPage</class>
    <extends>QWidget</extends>
-   <header location="global">pages/calibrationpage.h</header>
+   <header>pages/calibrationpage.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

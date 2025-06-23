@@ -477,28 +477,7 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_meas" stretch="5,0,2">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="3,0,2">
-        <item>
-         <widget class="QWidget" name="view_elevation" native="true"/>
-        </item>
-        <item>
-         <widget class="Line" name="line_4">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,1">
-          <item>
-           <widget class="QWidget" name="view_plan" native="true"/>
-          </item>
-          <item>
-           <widget class="QWidget" name="view_3d" native="true"/>
-          </item>
-         </layout>
-        </item>
-       </layout>
+       <widget class="measurementFigure" name="measureFigure" native="true"/>
       </item>
       <item>
        <widget class="Line" name="line_2">
@@ -508,7 +487,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="groupBox_4">
+       <widget class="QGroupBox" name="consoleGroup">
         <property name="styleSheet">
          <string notr="true">background-color:rgb(244, 244, 244)</string>
         </property>
@@ -581,6 +560,14 @@
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>measurementFigure</class>
+   <extends>QWidget</extends>
+   <header location="global">pages/measurementfigure.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

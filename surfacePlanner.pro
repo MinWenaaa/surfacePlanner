@@ -16,6 +16,7 @@ SOURCES += \
     mainwindow.cpp \
     pages/calibrationpage.cpp \
     pages/datameasurementpage.cpp \
+    pages/measurementfigure.cpp \
     tools/elevationanalyzer.cpp
 
 HEADERS += \
@@ -23,12 +24,14 @@ HEADERS += \
     mainwindow.h \
     pages/calibrationpage.h \
     pages/datameasurementpage.h \
+    pages/measurementfigure.h \
     tools/elevationanalyzer.h
 
 FORMS += \
     mainwindow.ui \
     pages/calibrationpage.ui \
-    pages/datameasurementpage.ui
+    pages/datameasurementpage.ui \
+    pages/measurementfigure.ui
 
 INCLUDEPATH += $$PWD\include
 LIBS += -L$$PWD\include -lProject2

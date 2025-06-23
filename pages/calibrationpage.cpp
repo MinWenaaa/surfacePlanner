@@ -20,17 +20,11 @@ const int bubble_r = 36;
 //const char* address = "192.168.250.1";
 const char* address = "AT500Simulator";
 
-const QColor colors[] = {QColor(249, 231, 167), QColor(239, 118, 123), QColor(67, 163, 239), QColor("#629433")};
-const QColor backgroundColor = QColor("#f9f9f9");
-
 CalibrationPage::CalibrationPage(QWidget *parent)
     : QWidget(parent), ui(new Ui::CalibrationPage), isMeasuring(false), measureNum(0),
     last_x(0), last_y(0), currentDistance(0), pointNum(0)
 {
     ui->setupUi(this);
-    view_3d = ui->view_3d;
-    view_elevation = ui->view_elevation;
-    view_plan = ui->view_plan;
     logEdit = ui->logEdit;
     logEdit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);  // 隐藏垂直滚动条
     logEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // 隐藏水平滚动条
@@ -52,6 +46,37 @@ CalibrationPage::~CalibrationPage()
     delete ui;
 }
 
+void CalibrationPage::setupView() {
+
+
+    scene = new QGraphicsScene(this);
+    scene->setSceneRect(-10, -10, 20, 20); // 设置坐标范围
+    ui->Inclination_container->setStyleSheet("background: transparent; border: 0px;");
+    ui->Inclination_container->setScene(scene);
+    ui->Inclination_container->setRenderHint(QPainter::Antialiasing);
+    ui->Inclination_container->scale(1, -1);
+
+    QGraphicsEllipseItem* outerCircle = new QGraphicsEllipseItem(-bubble_r*1.5, -bubble_r*1.5, bubble_r*3, bubble_r*3);
+    outerCircle->setPen(QPen(Qt::black, 0.5));
+    outerCircle->setBrush(Qt::NoBrush);
+    scene->addItem(outerCircle);
+    QGraphicsEllipseItem* innerCircle = new QGraphicsEllipseItem(-bubble_r*0.8, -bubble_r*0.8, bubble_r*1.6, bubble_r*1.6);
+    innerCircle->setPen(QPen(Qt::black, 0.5));
+    innerCircle->setBrush(Qt::NoBrush);
+    scene->addItem(innerCircle);
+
+    circle = new QGraphicsEllipseItem(-bubble_r/2, -bubble_r/2, bubble_r, bubble_r);
+    circle->setPen(QPen(colors[3], 0));
+    circle->setBrush(QBrush(colors[3]));
+    scene->addItem(circle);
+
+    auto crosshairH = scene->addLine(-bubble_r*1.5, 0, bubble_r*1.5, 0, QPen(Qt::black, 0.5));
+    auto crosshairV = scene->addLine(0, -bubble_r*1.5, 0, bubble_r*1.5, QPen(Qt::black, 0.5));
+    crosshairH->setZValue(1);
+    crosshairV->setZValue(1);
+
+}
+
 void CalibrationPage::on_connectionButton_clicked() {
     LMFWrapper::instance().connectTo(address);
     ui->info_container->show();
@@ -63,16 +88,6 @@ void CalibrationPage::on_connectionButton_clicked() {
 
 void CalibrationPage::on_measureButton_clicked() {
     if(!isMeasuring) {
-        tempElevationSerious = m_elevationSeries[measureNum];
-        tempPlanSerious = m_planSeries[measureNum];
-        temp3dSerious = m_3dSeries[measureNum];
-        planChart->addSeries(tempPlanSerious);
-        elevationChart->addSeries(tempElevationSerious);
-        m_scatter->addSeries(temp3dSerious);
-        tempPlanSerious->attachAxis(planAxisX);  // 平面图绑定平面图的X轴
-        tempPlanSerious->attachAxis(planAxisY);  // 平面图绑定平面图的Y轴
-        tempElevationSerious->attachAxis(eleAxisX);  // 高程图绑定高程图的X轴
-        tempElevationSerious->attachAxis(eleAxisY);  // 高程图绑定高程图的Y轴
         pointNum = 0; currentDistance = 0;
 
         QString text = ui->seperationEdit->text();
@@ -117,59 +132,23 @@ void CalibrationPage::on_sampleMod_currentIndexChanged(int index) {
 }
 
 void CalibrationPage::on_refreshButton_clicked() {
-    refreshData();
-    for(int i=0; i<3;i++) {
-        m_elevationSeries[i]->clear();
-        m_planSeries[i]->clear();
-        m_3dSeries[i]->dataProxy()->removeItems(0, m_3dSeries[i]->dataProxy()->itemCount());
-    }
-    eleAxisX->setRange(0, 30);
-    eleAxisY->setRange(0, 2);
-    planAxisX->setRange(0, 30);
-    planAxisY->setRange(0, 2);
-
     appendLog("数据清空");
     ui->continueButton->setEnabled(false);
 }
 
 void CalibrationPage::addPoint(double x, double y, double z ) {
     if(measureNum>2) return;
-    if(pointNum){
-        currentDistance += std::sqrt((x-last_x)*(x-last_x) + (y-last_y) *(y-last_y));
-        if(measureNum==0) eleAxisX->setRange(0, currentDistance + 1);
-    } else if(measureNum==0){
-        max_x = min_x = x; max_y = min_y = y; max_z = min_z = z;
-        eleAxisY->setRange(z - 4, z + 4);
-        planAxisX->setRange(min_x-1, max_x+1);
-        planAxisY->setRange(min_y-1, max_y+1);
-    }
     pointNum++;
     last_x = x; last_y = y;
 
     min_x = x < min_x ? x : min_x; max_x = x > max_x ? x : max_x;
     min_x = y < min_x ? y : min_x; max_y = y > max_y ? x : max_y;
 
-    if(min_x < planAxisX->min()+0.5){
-        planAxisX->setRange(min_x-1, max_x+1);}
-    if(max_x > planAxisX->max()-0.5) {
-        planAxisX->setRange(min_x-1, max_x+1);}
-    if(min_y < planAxisY->min()+0.5) planAxisY->setRange(min_x-1, max_x+1);
-    if(max_y > planAxisY->max()-0.5) planAxisY->setRange(min_x-1, max_x+1);
 
     QPointF elevationPoint(currentDistance, z);
     QPointF planPoint(x, y);
     QVector3D threeDPoint(x, z, y);
 
-    m_elevationData[measureNum].append(elevationPoint);
-    m_planData[measureNum].append(planPoint);
-    m_3dData[measureNum].append(threeDPoint);
-    tempElevationSerious->append(elevationPoint);
-    tempPlanSerious->append(planPoint);
-    temp3dSerious->dataProxy()->addItem(threeDPoint);
-
-    // 刷新图表
-    planChart->update();
-    elevationChart->update();
 
 }
 
@@ -186,143 +165,7 @@ void CalibrationPage::renderInclination(double x, double y) {
     ui->inclination_y->setText("y: "+QString::number(y));
 }
 
-void CalibrationPage::setupView() {
 
-    refreshData();
-
-    elevationChart = new QChart();
-    eleAxisX = new QValueAxis();
-    eleAxisX->setRange(0, 30);
-    eleAxisY = new QValueAxis();
-    eleAxisY->setRange(0, 2);
-    elevationChart->addAxis(eleAxisX, Qt::AlignBottom);
-    elevationChart->addAxis(eleAxisY, Qt::AlignLeft);
-
-    m_elevationChartView = new QChartView(elevationChart);
-    m_elevationChartView->setRenderHint(QPainter::Antialiasing);
-    m_elevationChartView->setStyleSheet("background: transparent; border: none;");
-    elevationChart->setBackgroundBrush(Qt::transparent);
-
-    QVBoxLayout *layout2 = new QVBoxLayout(view_elevation);
-    layout2->setContentsMargins(0, 0, 0, 0);
-    layout2->addWidget(m_elevationChartView);
-
-    for (int i = 0; i < 3; ++i) {
-        QLineSeries *series = new QLineSeries();
-        series->setName(QString("重复测量%1").arg(i+1));
-        series->setColor(colors[i]);
-        series->setPen(Qt::NoPen);
-        series->setMarkerSize(8);
-        m_elevationSeries.append(series);
-
-    }
-
-
-
-
-    planChart = new QChart();
-    planAxisX = new QValueAxis();
-    planAxisY = new QValueAxis();
-    planAxisX->setRange(0, 30);
-    planAxisY->setRange(0, 30);
-    planChart->addAxis(planAxisX, Qt::AlignBottom);
-    planChart->addAxis(planAxisY, Qt::AlignLeft);
-
-    m_planChartView = new QChartView(planChart);
-    m_planChartView->setRenderHint(QPainter::Antialiasing);
-    m_planChartView->setStyleSheet("background: transparent; border: none;");
-    planChart->setBackgroundBrush(Qt::transparent);
-
-    QVBoxLayout *layout3 = new QVBoxLayout(view_3d);
-    layout3->setContentsMargins(0, 0, 0, 0);
-    layout3->addWidget(m_planChartView);
-
-    for (int i = 0; i < 3; ++i) {
-        QScatterSeries *series = new QScatterSeries();
-        series->setName(QString("重复测量%1").arg(i+1));
-        series->setColor(colors[i]);
-        series->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-        series->setMarkerSize(8);
-        m_planSeries.append(series);
-    }
-
-
-
-    m_scatter = new Q3DScatter();
-    m_scatter->setAspectRatio(1.0);
-    m_scatter->setHorizontalAspectRatio(1.0);
-    m_scatter->scene()->activeCamera()->setZoomLevel(200);
-    m_scatter->setAxisX(new QValue3DAxis);
-    m_scatter->setAxisY(new QValue3DAxis);
-    m_scatter->setAxisZ(new QValue3DAxis);
-    m_scatter->axisX()->setRange(-10, 10);
-    m_scatter->axisY()->setRange(-5, 5);
-    m_scatter->axisZ()->setRange(-10, 10);
-    QWidget *container = QWidget::createWindowContainer(m_scatter);
-    container->setAttribute(Qt::WA_TranslucentBackground);
-    container->setStyleSheet("background: transparent; border: none;");
-    QVBoxLayout *layout = new QVBoxLayout(view_plan);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(container);
-
-    Q3DTheme *theme = m_scatter->activeTheme();
-    theme->setGridEnabled(false);
-    theme->setLabelBorderEnabled(false);  // 启用坐标轴边框
-    theme->setBackgroundEnabled(false);  // 禁用主题背景
-    theme->setBackgroundColor(Qt::transparent);  // 主题背景透明
-    theme->setWindowColor(backgroundColor);
-
-    for (int i = 0; i < 3; ++i) {
-        QScatter3DSeries *series = new QScatter3DSeries();
-        series->setMesh(QAbstract3DSeries::MeshPoint);
-        series->setItemSize(0.1f);
-        series->setBaseColor(colors[i]);
-        m_3dSeries.append(series);
-    }
-
-
-
-    scene = new QGraphicsScene(this);
-    scene->setSceneRect(-10, -10, 20, 20); // 设置坐标范围
-    ui->Inclination_container->setStyleSheet("background: transparent; border: 0px;");
-    ui->Inclination_container->setScene(scene);
-    ui->Inclination_container->setRenderHint(QPainter::Antialiasing);
-    ui->Inclination_container->scale(1, -1);
-
-    QGraphicsEllipseItem* outerCircle = new QGraphicsEllipseItem(-bubble_r*1.5, -bubble_r*1.5, bubble_r*3, bubble_r*3);
-    outerCircle->setPen(QPen(Qt::black, 0.5));
-    outerCircle->setBrush(Qt::NoBrush);
-    scene->addItem(outerCircle);
-    QGraphicsEllipseItem* innerCircle = new QGraphicsEllipseItem(-bubble_r*0.8, -bubble_r*0.8, bubble_r*1.6, bubble_r*1.6);
-    innerCircle->setPen(QPen(Qt::black, 0.5));
-    innerCircle->setBrush(Qt::NoBrush);
-    scene->addItem(innerCircle);
-
-    circle = new QGraphicsEllipseItem(-bubble_r/2, -bubble_r/2, bubble_r, bubble_r);
-    circle->setPen(QPen(colors[3], 0));
-    circle->setBrush(QBrush(colors[3]));
-    scene->addItem(circle);
-
-    auto crosshairH = scene->addLine(-bubble_r*1.5, 0, bubble_r*1.5, 0, QPen(Qt::black, 0.5));
-    auto crosshairV = scene->addLine(0, -bubble_r*1.5, 0, bubble_r*1.5, QPen(Qt::black, 0.5));
-    crosshairH->setZValue(1);
-    crosshairV->setZValue(1);
-
-}
-
-void CalibrationPage::appendLog(const QString& message, QColor color) {
-    QString timestamp = QDateTime::currentDateTime().toString("[hh:mm:ss] ");
-
-    QTextCharFormat format;
-    format.setForeground(QBrush(color)); // 设置文字颜色
-
-    QTextCursor cursor(logEdit->document());
-    cursor.movePosition(QTextCursor::End);
-    cursor.insertText(timestamp, format); // 插入带格式的时间戳
-    cursor.insertText(message + "\n", format); // 插入带格式的日志消息
-
-    logEdit->ensureCursorVisible();
-}
 
 void CalibrationPage::startAnalysis() {
     QThread* workerThread = new QThread(this);
@@ -350,7 +193,6 @@ void CalibrationPage::startAnalysis() {
     ui->label_maxDiff->setText("最大高差");
     ui->label_correlation->setText("相关系数");
 
-    emit requestAnalysis(m_elevationData);
 }
 
 void CalibrationPage::handleAnalysisResults(int dataset1, int dataset2, double maxDiff, double correlation) {
@@ -370,13 +212,6 @@ void CalibrationPage::onAnalysisFInished() {
     appendLog("处理完成");
 }
 
-void CalibrationPage::refreshData() {
-    for (int i = 0; i < 3; ++i) {
-        m_elevationData.append(QVector<QPointF>());
-        m_planData.append(QVector<QPointF>());
-        m_3dData.append(QVector<QVector3D>());
-    }
-}
 
 void CalibrationPage::on_continueButton_clicked()
 {
@@ -386,9 +221,17 @@ void CalibrationPage::on_continueButton_clicked()
             this, &CalibrationPage::addPoint);
 }
 
+void CalibrationPage::appendLog(const QString& message, QColor color) {
+    QString timestamp = QDateTime::currentDateTime().toString("[hh:mm:ss] ");
 
-void CalibrationPage::on_pushButton_clicked()
-{
-    stationaryMeasurement();
+    QTextCharFormat format;
+    format.setForeground(QBrush(color)); // 设置文字颜色
+
+    QTextCursor cursor(logEdit->document());
+    cursor.movePosition(QTextCursor::End);
+    cursor.insertText(timestamp, format); // 插入带格式的时间戳
+    cursor.insertText(message + "\n", format); // 插入带格式的日志消息
+
+    logEdit->ensureCursorVisible();
 }
 

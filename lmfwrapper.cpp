@@ -121,5 +121,7 @@ void LMFWrapper::sendTestData() {
 }
 
 void LMFWrapper::stationaryMeasurementThis() {
-    stationaryMeasurement();
+    QTimer::singleShot(500, this, [](){
+        stationaryMeasurement();
+    });
 }

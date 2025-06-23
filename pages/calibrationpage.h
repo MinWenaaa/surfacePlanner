@@ -11,6 +11,7 @@
 #include <QtWidgets/QWidget>
 #include <QTextEdit>
 
+
 namespace Ui {
 class CalibrationPage;
 }
@@ -33,16 +34,12 @@ private slots:
     void on_connectionButton_clicked();
     void on_measureButton_clicked();
     void on_sampleMod_currentIndexChanged(int index);
+    void on_refreshButton_clicked();
+    void on_continueButton_clicked();
 
     void handleAnalysisResults(int dataset1, int dataset2, double maxDiff, double correlation);
     void handleAnalysisError(const QString& message);
     void onAnalysisFInished();
-
-    void on_refreshButton_clicked();
-
-    void on_continueButton_clicked();
-
-    void on_pushButton_clicked();
 
 private:
     Ui::CalibrationPage *ui;
@@ -53,22 +50,6 @@ private:
     QGraphicsScene *scene;
     QGraphicsEllipseItem *circle;      // 圆对象
 
-    QWidget *view_3d, *view_elevation, *view_plan;
-    Q3DScatter *m_scatter;
-    QChartView *m_elevationChartView;
-    QChartView *m_planChartView;
-    QChart *elevationChart, *planChart;
-    QValueAxis *eleAxisX, *eleAxisY, *planAxisX, *planAxisY;
-
-    QVector<QVector<QPointF>> m_elevationData;
-    QVector<QVector<QPointF>> m_planData;
-    QVector<QVector<QVector3D>> m_3dData;
-    QList<QLineSeries*> m_elevationSeries;  // 高程图表系列
-    QList<QScatterSeries*> m_planSeries;    // 平面图表系列
-    QList<QScatter3DSeries*> m_3dSeries;    // 3D图表系列
-    QLineSeries* tempElevationSerious;
-    QScatterSeries* tempPlanSerious;
-    QScatter3DSeries* temp3dSerious;
     double last_x, last_y, currentDistance;
     double max_x, min_x, max_y, min_y, max_z, min_z;
 
@@ -80,7 +61,6 @@ private:
     void setupView();
     void appendLog(const QString& message, QColor color = QColor(33, 33, 33));
     void startAnalysis();
-    void refreshData();
 
 };
 
