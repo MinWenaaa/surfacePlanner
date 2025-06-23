@@ -35,12 +35,23 @@ void MainWindow::changeTab(int index) {
     auto wrapper = &LMFWrapper::instance();
     switch(index) {
     case 0:
+        disconnect(wrapper, &LMFWrapper::inclinationChanged, this->measurementPage, &DataMeasurementPage::receiveInclinationChange);
+        disconnect(wrapper, &LMFWrapper::singleMeasurementArrived, this->measurementPage, &DataMeasurementPage::receiveSingleMeasurement);
+        disconnect(wrapper, &LMFWrapper::positionChanged, this->measurementPage, &DataMeasurementPage::receivePositionChange);
         connect(wrapper, &LMFWrapper::inclinationChanged, this->calibrationPage, &CalibrationPage::receiveInclinationChange);
         connect(wrapper, &LMFWrapper::singleMeasurementArrived, this->calibrationPage, &CalibrationPage::receiveSingleMeasurement);
         connect(wrapper, &LMFWrapper::positionChanged, this->calibrationPage, &CalibrationPage::receivePositionChange);
+        break;
     case 1:
+        disconnect(wrapper, &LMFWrapper::inclinationChanged, this->calibrationPage, &CalibrationPage::receiveInclinationChange);
+        disconnect(wrapper, &LMFWrapper::singleMeasurementArrived, this->calibrationPage, &CalibrationPage::receiveSingleMeasurement);
+        disconnect(wrapper, &LMFWrapper::positionChanged, this->calibrationPage, &CalibrationPage::receivePositionChange);
         connect(wrapper, &LMFWrapper::inclinationChanged, this->measurementPage, &DataMeasurementPage::receiveInclinationChange);
         connect(wrapper, &LMFWrapper::singleMeasurementArrived, this->measurementPage, &DataMeasurementPage::receiveSingleMeasurement);
+        connect(this->measurementPage, &DataMeasurementPage::stationaryMeasureSig, wrapper, &LMFWrapper::stationaryMeasurementThis);
         connect(wrapper, &LMFWrapper::positionChanged, this->measurementPage, &DataMeasurementPage::receivePositionChange);
+        connect(wrapper, &LMFWrapper::imageArrived, this->measurementPage, &DataMeasurementPage::renderBitmap);
+        StopOverviewCamera();
+        break;
     }
 }

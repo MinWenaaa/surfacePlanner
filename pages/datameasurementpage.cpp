@@ -21,19 +21,11 @@ DataMeasurementPage::DataMeasurementPage(QWidget *parent)
 
     ui->tableView->setModel(convertPoint);
 
-    setupView();
-
-    auto wrapper = &LMFWrapper::instance();
-    connect(this, &DataMeasurementPage::stationaryMeasureSig,
-            wrapper, &LMFWrapper::stationaryMeasurementThis);
-
+    measureFig = ui->measureFigure;
+    measureFig->setUpView(1);
 
 }
 
-void DataMeasurementPage::setupView() {
-
-
-}
 
 void DataMeasurementPage::initTableView() {
 
@@ -212,4 +204,10 @@ DataMeasurementPage::~DataMeasurementPage()
 }
 
 
+
+
+void DataMeasurementPage::on_pushButton_clicked()
+{
+    StartOverviewCamera();
+}
 

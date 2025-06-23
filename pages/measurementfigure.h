@@ -24,13 +24,13 @@ public:
 
     void addSerious(const QString& name, const QColor& color);
     void addPoint(double x, double y, double z);
+    void clearAllData();
+    void setUpView(int type);
+
 
     QVector<QVector<QPointF>>& getEleData();
 private:
     Ui::measurementFigure *ui;
-
-    void setUpView();
-
     int seriousNum, pointNum;
     double last_x, last_y, currentDistance;
     double max_x, min_x, max_y, min_y, max_z, min_z;

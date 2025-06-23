@@ -43,7 +43,7 @@ private:
 
     void handlePositionChanged(float x, float y, float z);
     void handleMeasurementArrived(double x, double y, double z, int type);
-    void handleImageArrived(const QByteArray& data);
+    void handleImageArrived(const char* data);
     void handleInclinationChanged(double x, double y, bool flag);
 
 signals:

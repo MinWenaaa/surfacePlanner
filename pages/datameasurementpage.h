@@ -12,6 +12,8 @@
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QChartView>
 
+#include "measurementfigure.h"
+
 
 class QPushButton;
 class QLabel;
@@ -36,6 +38,7 @@ public slots:
     void receivePositionChange();
     void receiveInclinationChange();
     void receiveSingleMeasurement();
+    void renderBitmap(const char* bitmapData);
 
 signals:
     void stationaryMeasureSig();
@@ -43,7 +46,6 @@ signals:
 private slots:
     void on_addPointButton_clicked();
     void on_fileButton_clicked();
-    void renderBitmap(const char* bitmapData);
     void addConnectionPoint(double x, double y, double z);
     void addAverConnectionPoint(double x, double y, double z);        // 添加点
 
@@ -51,23 +53,13 @@ private slots:
     void on_measureButton_clicked();
     void on_sampleMod_currentIndexChanged(int index);
 
+    void on_pushButton_clicked();
+
 private:
 
     QStandardItemModel *convertPoint;
 
-    QWidget *view_3d, *view_elevation, *view_plan;
-    Q3DScatter *m_scatter;
-    QChartView *m_elevationChartView;
-    QChartView *m_planChartView;
-    QChart *elevationChart, *planChart;
-    QWidget *m_scatterContainer;
-    QList<QLineSeries*> m_elevationSeries;  // 高程图表系列
-    QList<QScatterSeries*> m_planSeries;    // 平面图表系列
-    QList<QScatter3DSeries*> m_3dSeries;    // 3D图表系列
-    QLineSeries* tempElevationSerious;
-    QScatterSeries* tempPlanSerious;
-    QScatter3DSeries* temp3dSerious;
-    QValueAxis *eleAxisX, *eleAxisY, *planAxisX, *planAxisY;
+    measurementFigure *measureFig;
     double last_x, last_y, currentDistance;
     double max_x, min_x, max_y, min_y, max_z, min_z;
 
@@ -79,7 +71,6 @@ private:
     QLabel *imageLabel;
     QTextEdit* logEdit;
 
-    void setupView();
     void initTableView();   // 初始化表格
     void saveConnectionData();
     void appendLog(const QString& message, QColor color = QColor(33, 33, 33));

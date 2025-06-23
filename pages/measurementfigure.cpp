@@ -9,11 +9,9 @@ measurementFigure::measurementFigure(QWidget *parent)
     view_3d = ui->view_3d;
     view_elevation = ui->view_elevation;
     view_plan = ui->view_plan;
-
-    setUpView();
 }
 
-void measurementFigure::setUpView() {
+void measurementFigure::setUpView(int type) {
     elevationChart = new QChart();
     eleAxisX = new QValueAxis();  eleAxisY = new QValueAxis();
     eleAxisY->setRange(0, 2); eleAxisX->setRange(0, 30);
@@ -25,7 +23,7 @@ void measurementFigure::setUpView() {
     m_elevationChartView->setStyleSheet("background: transparent; border: none;");
     elevationChart->setBackgroundBrush(Qt::transparent);
 
-    QVBoxLayout *layout2 = new QVBoxLayout(view_elevation);
+    QVBoxLayout *layout2 = new QVBoxLayout(type ? view_3d : view_elevation);
     layout2->setContentsMargins(0, 0, 0, 0);
     layout2->addWidget(m_elevationChartView);
 
@@ -42,7 +40,7 @@ void measurementFigure::setUpView() {
     m_planChartView->setStyleSheet("background: transparent; border: none;");
     planChart->setBackgroundBrush(Qt::transparent);
 
-    QVBoxLayout *layout3 = new QVBoxLayout(view_3d);
+    QVBoxLayout *layout3 = new QVBoxLayout(view_plan);
     layout3->setContentsMargins(0, 0, 0, 0);
     layout3->addWidget(m_planChartView);
 
@@ -57,12 +55,12 @@ void measurementFigure::setUpView() {
     QWidget *container = QWidget::createWindowContainer(m_scatter);
     container->setAttribute(Qt::WA_TranslucentBackground);
     container->setStyleSheet("background: transparent; border: none;");
-    QVBoxLayout *layout = new QVBoxLayout(view_plan);
+    QVBoxLayout *layout = new QVBoxLayout(type ? view_elevation : view_3d);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(container);
 
     Q3DTheme *theme = m_scatter->activeTheme();
-    theme->setGridEnabled(false);
+    //theme->setGridEnabled(false);
     theme->setLabelBorderEnabled(false);  // 启用坐标轴边框
     theme->setBackgroundEnabled(false);  // 禁用主题背景
     theme->setBackgroundColor(Qt::transparent);  // 主题背景透明
@@ -79,8 +77,8 @@ void measurementFigure::addSerious(const QString& name, const QColor& color) {
     QScatterSeries *planSeries = new QScatterSeries();
     planSeries->setName(name);
     planSeries->setColor(color);
-    planSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    planSeries->setMarkerSize(8);
+    planSeries->setMarkerSize(5);
+    planSeries->setBorderColor(Qt::transparent);
     m_planSeries.append(planSeries);
 
     QScatter3DSeries *tSeries = new QScatter3DSeries();
@@ -113,15 +111,24 @@ void measurementFigure::addPoint(double x, double y, double z) {
             planAxisY->setRange(min_y-1, max_y+1);
         }
         min_x = x < min_x ? x : min_x; max_x = x > max_x ? x : max_x;
-        min_x = y < min_x ? y : min_x; max_y = y > max_y ? x : max_y;
+        min_x = y < min_x ? y : min_x; max_y = y > max_y ? y : max_y;
+        min_z = z < min_z ? z : min_z; max_z = z > max_z ? z : max_z;
 
-        if(min_x < planAxisX->min()+0.5){
-            planAxisX->setRange(min_x-1, max_x+1);}
-        if(max_x > planAxisX->max()-0.5) {
-            planAxisX->setRange(min_x-1, max_x+1);}
-        if(min_y < planAxisY->min()+0.5) planAxisY->setRange(min_x-1, max_x+1);
-        if(max_y > planAxisY->max()-0.5) planAxisY->setRange(min_x-1, max_x+1);
-        if(currentDistance > eleAxisX->max() - 50) eleAxisX->setRange(0, currentDistance+100);
+        if(min_x < planAxisX->min()+0.5 || max_x > planAxisX->max()-0.5){
+            planAxisX->setRange(min_x-1, max_x+1);
+            m_scatter->axisX()->setRange(min_x-1, max_x+1);
+        }
+        if(min_y < planAxisY->min()+0.5 || max_y > planAxisY->max()-0.5) {
+            planAxisY->setRange(min_y-1, max_y+1);
+            m_scatter->axisZ()->setRange(min_y-1, max_y+1);
+        }
+        if(min_z < eleAxisY->min()+1 || max_z > eleAxisY->max()-1){
+            eleAxisY->setRange(min_z-2, max_z+2);
+            m_scatter->axisY()->setRange(min_z-2, max_z+2);
+        }
+        if(currentDistance > eleAxisX->max() - 50) {
+            eleAxisX->setRange(0, currentDistance+100);
+        }
     }
     pointNum++;
 
@@ -135,6 +142,15 @@ void measurementFigure::addPoint(double x, double y, double z) {
 
     planChart->update();
     elevationChart->update();
+}
+
+void measurementFigure::clearAllData() {
+    for(int i=0; i<3;i++) {
+        if(!m_elevationSeries[i]) return;
+        m_elevationSeries[i]->clear();
+        m_planSeries[i]->clear();
+        m_3dSeries[i]->dataProxy()->removeItems(0, m_3dSeries[i]->dataProxy()->itemCount());
+    }
 }
 
 QVector<QVector<QPointF>>& measurementFigure::getEleData() {

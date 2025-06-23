@@ -18,7 +18,7 @@
 
 const int bubble_r = 36;
 //const char* address = "192.168.250.1";
-const char* address = "AT500Simulator";
+//const char* address = "AT500Simulator";
 const QColor colors[] = {QColor(249, 231, 167), QColor(239, 118, 123), QColor(67, 163, 239), QColor("#629433")};
 
 CalibrationPage::CalibrationPage(QWidget *parent)
@@ -30,8 +30,9 @@ CalibrationPage::CalibrationPage(QWidget *parent)
     logEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // 隐藏水平滚动条
 
     measureFig = ui->measureFigure;
+    measureFig->setUpView(0);
     ui->refreshButton->setEnabled(false);
-    ui->continueButton->setEnabled(false);
+    //ui->continueButton->setEnabled(false);
     ui->info_container->hide();
 
     setupView();
@@ -86,10 +87,10 @@ void CalibrationPage::receiveSingleMeasurement(double x, double y, double z) {
 
 
 void CalibrationPage::on_connectionButton_clicked() {
-    LMFWrapper::instance().connectTo(address);
+    LMFWrapper::instance().connectTo("");
     ui->info_container->show();
     ui->statusLabel->setText("连接成功");
-    ui->adressLabel->setText(address);
+    ui->adressLabel->setText("192.168.250.1");
     ui->nameLabel->setText("AT500");
 }
 

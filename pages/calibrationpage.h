@@ -59,9 +59,9 @@ private:
     QTextEdit* logEdit;
 
     void renderInclination(double, double);
-    void setupView();
     void appendLog(const QString& message, QColor color = QColor(33, 33, 33));
     void startAnalysis();
+    void setupView();
 
 };
 

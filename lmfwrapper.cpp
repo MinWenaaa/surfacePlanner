@@ -4,7 +4,7 @@
 #include "include/TrackerWrapper.h"
 
 //const char* address = "192.168.250.1";
-//const char* address = "AT500Simulator";
+const char* address = "AT500Simulator";
 
 void LMFWrapper::init() {
     this->moveToThread(workerThread());
@@ -19,7 +19,7 @@ QThread* LMFWrapper::workerThread() {
     return thread;
 }
 
-bool LMFWrapper::connectTo(const char* address) {
+bool LMFWrapper::connectTo(const char* add) {
     init();
     bool flag = TrackerConnect(address);
 
@@ -51,9 +51,8 @@ void LMFWrapper::onMeasurementArrived(double x, double y, double z, int type, vo
 
 void LMFWrapper::onImageArrived(const char* data, void* userData) {
     LMFWrapper* wrapper = static_cast<LMFWrapper*>(userData);
-    QByteArray imageData(data, data ? strlen(data) : 0);
     QMetaObject::invokeMethod(wrapper, [=](){
-        wrapper->handleImageArrived(imageData);
+        wrapper->handleImageArrived(data);
     }, Qt::QueuedConnection);
 }
 
@@ -78,7 +77,7 @@ void LMFWrapper::handleMeasurementArrived(double x, double y, double z, int type
     if(type == 1) emit stationaryMeasuremntArrived(x, y, z);
 }
 
-void LMFWrapper::handleImageArrived(const QByteArray& data) {
+void LMFWrapper::handleImageArrived(const char* data) {
     emit imageArrived(data);
 }
 
