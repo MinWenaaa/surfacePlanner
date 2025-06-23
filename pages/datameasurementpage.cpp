@@ -106,6 +106,19 @@ void DataMeasurementPage::addConnectionPoint(double x, double y, double z) {
     }
 }
 
+void DataMeasurementPage::receivePositionChange() {
+
+}
+
+void DataMeasurementPage::receiveInclinationChange() {
+
+}
+
+void DataMeasurementPage::receiveSingleMeasurement() {
+
+}
+
+
 void DataMeasurementPage::addAverConnectionPoint(double x, double y, double z) {
     int row = convertPoint->rowCount() - 1;
 

@@ -3,12 +3,13 @@
 
 measurementFigure::measurementFigure(QWidget *parent)
     : QWidget(parent)
-    , ui(new Ui::measurementFigure)
+    , ui(new Ui::measurementFigure), seriousNum(0), pointNum(0), last_x(0), last_y(0), currentDistance(0)
 {
     ui->setupUi(this);
     view_3d = ui->view_3d;
     view_elevation = ui->view_elevation;
     view_plan = ui->view_plan;
+
     setUpView();
 }
 
@@ -28,17 +29,6 @@ void measurementFigure::setUpView() {
     layout2->setContentsMargins(0, 0, 0, 0);
     layout2->addWidget(m_elevationChartView);
 
-    for (int i = 0; i < 3; ++i) {
-        QLineSeries *series = new QLineSeries();
-        series->setName(QString("重复测量%1").arg(i+1));
-        series->setColor(colors[i]);
-        series->setPen(Qt::NoPen);
-        series->setMarkerSize(8);
-        m_elevationSeries.append(series);
-
-    }
-
-
 
 
     planChart = new QChart();
@@ -55,15 +45,6 @@ void measurementFigure::setUpView() {
     QVBoxLayout *layout3 = new QVBoxLayout(view_3d);
     layout3->setContentsMargins(0, 0, 0, 0);
     layout3->addWidget(m_planChartView);
-
-    for (int i = 0; i < 3; ++i) {
-        QScatterSeries *series = new QScatterSeries();
-        series->setName(QString("重复测量%1").arg(i+1));
-        series->setColor(colors[i]);
-        series->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-        series->setMarkerSize(8);
-        m_planSeries.append(series);
-    }
 
 
 
@@ -87,13 +68,83 @@ void measurementFigure::setUpView() {
     theme->setBackgroundColor(Qt::transparent);  // 主题背景透明
     theme->setWindowColor(backgroundColor);
 
-    for (int i = 0; i < 3; ++i) {
-        QScatter3DSeries *series = new QScatter3DSeries();
-        series->setMesh(QAbstract3DSeries::MeshPoint);
-        series->setItemSize(0.1f);
-        series->setBaseColor(colors[i]);
-        m_3dSeries.append(series);
+}
+
+void measurementFigure::addSerious(const QString& name, const QColor& color) {
+    seriousNum++; currentDistance = 0; pointNum = 0;
+    QLineSeries *eleSeries = new QLineSeries();
+    eleSeries->setName(name); eleSeries->setColor(color);
+    m_elevationSeries.append(eleSeries);
+
+    QScatterSeries *planSeries = new QScatterSeries();
+    planSeries->setName(name);
+    planSeries->setColor(color);
+    planSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+    planSeries->setMarkerSize(8);
+    m_planSeries.append(planSeries);
+
+    QScatter3DSeries *tSeries = new QScatter3DSeries();
+    tSeries->setMesh(QAbstract3DSeries::MeshPoint);
+    tSeries->setItemSize(0.1f);
+    tSeries->setBaseColor(color);
+    m_3dSeries.append(tSeries);
+
+    tempElevationSerious = eleSeries;
+    tempPlanSerious = planSeries;
+    temp3dSerious = tSeries;
+    planChart->addSeries(tempPlanSerious);
+    elevationChart->addSeries(tempElevationSerious);
+    m_scatter->addSeries(temp3dSerious);
+    tempPlanSerious->attachAxis(planAxisX);  // 平面图绑定平面图的X轴
+    tempPlanSerious->attachAxis(planAxisY);  // 平面图绑定平面图的Y轴
+    tempElevationSerious->attachAxis(eleAxisX);  // 高程图绑定高程图的X轴
+    tempElevationSerious->attachAxis(eleAxisY);  // 高程图绑定高程图的Y轴
+}
+
+void measurementFigure::addPoint(double x, double y, double z) {
+    if(pointNum) {
+        currentDistance += std::sqrt((x-last_x)*(x-last_x) + (y-last_y) *(y-last_y));
     }
+    if(seriousNum==1) {
+        if(!pointNum) {
+            max_x = min_x = x; max_y = min_y = y; max_z = min_z = z;
+            eleAxisY->setRange(z - 4, z + 4);
+            planAxisX->setRange(min_x-1, max_x+1);
+            planAxisY->setRange(min_y-1, max_y+1);
+        }
+        min_x = x < min_x ? x : min_x; max_x = x > max_x ? x : max_x;
+        min_x = y < min_x ? y : min_x; max_y = y > max_y ? x : max_y;
+
+        if(min_x < planAxisX->min()+0.5){
+            planAxisX->setRange(min_x-1, max_x+1);}
+        if(max_x > planAxisX->max()-0.5) {
+            planAxisX->setRange(min_x-1, max_x+1);}
+        if(min_y < planAxisY->min()+0.5) planAxisY->setRange(min_x-1, max_x+1);
+        if(max_y > planAxisY->max()-0.5) planAxisY->setRange(min_x-1, max_x+1);
+        if(currentDistance > eleAxisX->max() - 50) eleAxisX->setRange(0, currentDistance+100);
+    }
+    pointNum++;
+
+    QPointF elevationPoint(currentDistance, z);
+    QPointF planPoint(x, y);
+    QVector3D threeDPoint(x, z, y);
+
+    tempElevationSerious->append(elevationPoint);
+    tempPlanSerious->append(planPoint);
+    temp3dSerious->dataProxy()->addItem(threeDPoint);
+
+    planChart->update();
+    elevationChart->update();
+}
+
+QVector<QVector<QPointF>>& measurementFigure::getEleData() {
+    m_eleDataCache.clear();
+    for (QLineSeries* series : m_elevationSeries) {
+        if (series) {
+            m_eleDataCache.append(series->pointsVector());
+        }
+    }
+    return m_eleDataCache;
 }
 
 measurementFigure::~measurementFigure()

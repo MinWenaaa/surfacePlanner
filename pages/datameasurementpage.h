@@ -32,6 +32,11 @@ public:
 
     Ui::DataMeasurementPage *ui;
 
+public slots:
+    void receivePositionChange();
+    void receiveInclinationChange();
+    void receiveSingleMeasurement();
+
 signals:
     void stationaryMeasureSig();
 

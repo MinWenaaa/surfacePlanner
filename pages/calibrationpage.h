@@ -11,6 +11,8 @@
 #include <QtWidgets/QWidget>
 #include <QTextEdit>
 
+#include "measurementfigure.h"
+
 
 namespace Ui {
 class CalibrationPage;
@@ -25,7 +27,9 @@ public:
     ~CalibrationPage();
 
 public slots:
-    void addPoint(double, double, double);
+    void receivePositionChange(double x, double y, double z);
+    void receiveInclinationChange(double x, double y);
+    void receiveSingleMeasurement(double x, double y, double z);
 
 signals:
     void requestAnalysis(const QVector<QVector<QPointF>>& elevationData);
@@ -43,15 +47,12 @@ private slots:
 
 private:
     Ui::CalibrationPage *ui;
-
-    bool isMeasuring;
-    int measureNum;
-
+    measurementFigure *measureFig;
     QGraphicsScene *scene;
     QGraphicsEllipseItem *circle;      // 圆对象
 
-    double last_x, last_y, currentDistance;
-    double max_x, min_x, max_y, min_y, max_z, min_z;
+    bool isMeasuring;
+    int measureNum;
 
     int pointNum;
 

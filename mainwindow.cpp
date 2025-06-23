@@ -17,6 +17,10 @@ MainWindow::MainWindow(QWidget *parent)
     calibrationPage = ui->calibration_page;
     measurementPage = ui->datameasurement_page;
 
+    auto wrapper = &LMFWrapper::instance();
+    connect(wrapper, &LMFWrapper::changeTab, this, &MainWindow::changeTab);
+
+    changeTab(0);
     //ui->tabWidget->tabBar()->setEnabled(false);
 }
 
@@ -29,10 +33,14 @@ void MainWindow::changeTab(int index) {
     ui->tabWidget->setCurrentIndex(index);
 
     auto wrapper = &LMFWrapper::instance();
-    // switch(index) {
-    // case 0:
-
-    // case 1:
-
-    // }
+    switch(index) {
+    case 0:
+        connect(wrapper, &LMFWrapper::inclinationChanged, this->calibrationPage, &CalibrationPage::receiveInclinationChange);
+        connect(wrapper, &LMFWrapper::singleMeasurementArrived, this->calibrationPage, &CalibrationPage::receiveSingleMeasurement);
+        connect(wrapper, &LMFWrapper::positionChanged, this->calibrationPage, &CalibrationPage::receivePositionChange);
+    case 1:
+        connect(wrapper, &LMFWrapper::inclinationChanged, this->measurementPage, &DataMeasurementPage::receiveInclinationChange);
+        connect(wrapper, &LMFWrapper::singleMeasurementArrived, this->measurementPage, &DataMeasurementPage::receiveSingleMeasurement);
+        connect(wrapper, &LMFWrapper::positionChanged, this->measurementPage, &DataMeasurementPage::receivePositionChange);
+    }
 }

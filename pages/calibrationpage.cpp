@@ -19,20 +19,17 @@
 const int bubble_r = 36;
 //const char* address = "192.168.250.1";
 const char* address = "AT500Simulator";
+const QColor colors[] = {QColor(249, 231, 167), QColor(239, 118, 123), QColor(67, 163, 239), QColor("#629433")};
 
 CalibrationPage::CalibrationPage(QWidget *parent)
-    : QWidget(parent), ui(new Ui::CalibrationPage), isMeasuring(false), measureNum(0),
-    last_x(0), last_y(0), currentDistance(0), pointNum(0)
+    : QWidget(parent), ui(new Ui::CalibrationPage), isMeasuring(false), measureNum(0)
 {
     ui->setupUi(this);
     logEdit = ui->logEdit;
     logEdit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);  // 隐藏垂直滚动条
     logEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // 隐藏水平滚动条
 
-    auto wrapper = &LMFWrapper::instance();
-    connect(wrapper, &LMFWrapper::singleMeasurementArrived,
-                this, &CalibrationPage::addPoint);
-
+    measureFig = ui->measureFigure;
     ui->refreshButton->setEnabled(false);
     ui->continueButton->setEnabled(false);
     ui->info_container->hide();
@@ -77,6 +74,17 @@ void CalibrationPage::setupView() {
 
 }
 
+void CalibrationPage::receivePositionChange(double x, double y, double z) {
+
+}
+void CalibrationPage::receiveInclinationChange(double x, double y) {
+
+}
+void CalibrationPage::receiveSingleMeasurement(double x, double y, double z) {
+    measureFig->addPoint(x, y, z);
+}
+
+
 void CalibrationPage::on_connectionButton_clicked() {
     LMFWrapper::instance().connectTo(address);
     ui->info_container->show();
@@ -88,8 +96,7 @@ void CalibrationPage::on_connectionButton_clicked() {
 
 void CalibrationPage::on_measureButton_clicked() {
     if(!isMeasuring) {
-        pointNum = 0; currentDistance = 0;
-
+        pointNum = 0;
         QString text = ui->seperationEdit->text();
         bool ok;
         double value = text.toDouble(&ok);
@@ -103,8 +110,10 @@ void CalibrationPage::on_measureButton_clicked() {
         ui->measureButton->setText("结束测量");
         appendLog("开始：第 " + QString::number(measureNum+1) + " 次测量", colors[measureNum]);
 
+        measureFig->addSerious("重复观测" + QString::number(measureNum+1), colors[measureNum]);
+
     } else {
-        //stopMeasurement();
+        stopMeasurement();
 
         ui->measureStatusLabel->setText("");
         isMeasuring = false;
@@ -134,22 +143,6 @@ void CalibrationPage::on_sampleMod_currentIndexChanged(int index) {
 void CalibrationPage::on_refreshButton_clicked() {
     appendLog("数据清空");
     ui->continueButton->setEnabled(false);
-}
-
-void CalibrationPage::addPoint(double x, double y, double z ) {
-    if(measureNum>2) return;
-    pointNum++;
-    last_x = x; last_y = y;
-
-    min_x = x < min_x ? x : min_x; max_x = x > max_x ? x : max_x;
-    min_x = y < min_x ? y : min_x; max_y = y > max_y ? x : max_y;
-
-
-    QPointF elevationPoint(currentDistance, z);
-    QPointF planPoint(x, y);
-    QVector3D threeDPoint(x, z, y);
-
-
 }
 
 void CalibrationPage::renderInclination(double x, double y) {
@@ -193,6 +186,8 @@ void CalibrationPage::startAnalysis() {
     ui->label_maxDiff->setText("最大高差");
     ui->label_correlation->setText("相关系数");
 
+    emit requestAnalysis(measureFig->getEleData());
+
 }
 
 void CalibrationPage::handleAnalysisResults(int dataset1, int dataset2, double maxDiff, double correlation) {
@@ -213,12 +208,8 @@ void CalibrationPage::onAnalysisFInished() {
 }
 
 
-void CalibrationPage::on_continueButton_clicked()
-{
+void CalibrationPage::on_continueButton_clicked() {
     emit LMFWrapper::instance().changeTab(1);
-    auto wrapper = &LMFWrapper::instance();
-    disconnect(wrapper, &LMFWrapper::singleMeasurementArrived,
-            this, &CalibrationPage::addPoint);
 }
 
 void CalibrationPage::appendLog(const QString& message, QColor color) {
